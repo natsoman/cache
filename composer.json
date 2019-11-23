@@ -1,0 +1,24 @@
+{
+    "name": "epignosis/cache",
+    "description": "Epignosis cache client",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kostas Natsopoulos",
+            "email": "knatsopoulos@epignosishq.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": { "Epignosis\\": "src/" },
+        "classmap": ["src/"]
+    },
+    "require": {
+      "php" : "^7.1",
+      "ext-redis" : "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7"
+    }
+}
