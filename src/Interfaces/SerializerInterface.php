@@ -1,13 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Epignosis\Interfaces;
 
 interface SerializerInterface {
-
-    /**
-     * @param $normalizer
-     * @param $encoder
-     */
-    public function __construct($normalizer, $encoder);
 
     /**
      * @param $value

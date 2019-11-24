@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Epignosis;
 
 trait MemoizationTrait {
@@ -12,7 +15,8 @@ trait MemoizationTrait {
      * @param string $key
      * @param $value
      */
-    protected function addToMemory(string $key, $value): void {
+    protected function addToMemory(string $key, $value): void 
+    {
         $this->memory[$key] = $value;
     }
 
@@ -20,25 +24,29 @@ trait MemoizationTrait {
      * @param string $key
      * @return mixed|null
      */
-    protected function getFromMemory(string $key) {
+    protected function getFromMemory(string $key) 
+    {
         return $this->memory[$key] ?? null;
     }
 
     /**
      * @param string $key
      */
-    protected function deleteFromMemory(string $key): void {
+    protected function deleteFromMemory(string $key): void 
+    {
         unset($this->memory[$key]);
     }
 
     /**
      * @param array $values Associative array
      */
-    protected function setToMemory(array $values): void {
+    protected function setToMemory(array $values): void 
+    {
         $this->memory = array_merge($this->memory, $values);
     }
 
-    protected function cleanMemory():? void {
+    protected function cleanMemory(): void
+    {
         $this->memory = [];
     }
 }

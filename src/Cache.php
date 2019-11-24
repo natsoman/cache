@@ -1,18 +1,21 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Epignosis;
 
-use Epignosis\Interfaces\CacheInterface;
+use \Epignosis\Interfaces\CacheInterface;
 
 class Cache implements CacheInterface {
 
     /**
-     * @var null|\Redis|\RedisCluster
+     * @var \Redis|\RedisCluster
      */
-    protected $cache;
+    protected $service;
 
     /**
+     * Default options
+     *
      * @var array
      */
     protected $options = [
@@ -30,49 +33,55 @@ class Cache implements CacheInterface {
      *
      * @example
      * <pre>
-     * // Connect a standalone server
+     * // Connect on a standalone server
      * new Cache(['host' => '127.0.0.1:6379']);
      *
      * // Connect on a cluster
      * new Cache(['host' => ['127.0.0.1:7000','127.0.0.1:7001']]);
      * </pre>
      */
-    public function __construct($options) {
-        if (extension_loaded('redis')) {
-            $this->options = array_merge($options,$this->options);
-            extract($this->options);
-            if (isset($host) && is_array($host)) {
-                try {
-                    $this->cache = new \RedisCluster(null, $host);
-                    // In the event we can't reach a master, and it has slaves, failover for read commands
-                    $this->cache->setOption(\RedisCluster::OPT_SLAVE_FAILOVER, \RedisCluster::FAILOVER_ERROR);
-                } catch (\RedisClusterException $e) {}
-            } elseif (isset($host) && is_string($host)) {
-                list($host,$port) = explode(':',$host);
-                $this->cache = (new \Redis())->connect($host, $port, $timeout, $reserved, $retryInterval, $readTimeout);
-            } else {
-                throw new \InvalidArgumentException('Unknown redis host.');
+    public function __construct($options)
+    {
+        $this->options = array_merge($options, $this->options);
+        extract($this->options);
+        if (isset($host) && is_array($host)) {
+            try {
+                $this->service = new \RedisCluster(null, $host, $timeout, $readTimeout, $persistent);
+                // In the service we can't reach a master, and it has slaves, failover for read commands
+                $this->service->setOption(\RedisCluster::OPT_SLAVE_FAILOVER, \RedisCluster::FAILOVER_ERROR);
+            } catch (\RedisClusterException $e) {
+                throw new \RuntimeException('Redis cluster connection failed.');
             }
+        } elseif (isset($host) && is_string($host)) {
+            list($host, $port) = explode(':', $host);
+            $this->service = new \Redis();
+            $this->service->connect($host, $port ?? null, $timeout, $reserved, $retryInterval, $readTimeout);
         } else {
-            throw new \RuntimeException('redis extension is missing.');
+            throw new \InvalidArgumentException('Unknown redis host.');
         }
     }
 
     /**
      * @inheritdoc
      */
-    public function get(string $key) {
-        return $this->cache->get($key);
+    public function get(string $key)
+    {
+        return $this->service->get($key);
     }
 
     /**
      * @inheritdoc
      */
-    public function set(string $key, string $value, int $ttl = 0):? bool {
-        return $this->cache->setex($key, $ttl, $value);
+    public function set(string $key, string $value, int $ttl = 0): bool
+    {
+        return $this->service->setex($key, $ttl, $value);
     }
 
-    public function ping() {
-        return $this->cache->ping(null);
+    /**
+     * @inheritdoc
+     */
+    public function delete(string $key): bool
+    {
+        return $this->service->del($key) === 1 ? true : false;
     }
 }

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Epignosis\Interfaces;
 
 interface CacheInterface {
@@ -13,7 +16,13 @@ interface CacheInterface {
      * @param string $key
      * @param string $value
      * @param int $ttl
-     * @return mixed
+     * @return bool
      */
-    public function set(string $key, string $value, int $ttl = 0);
+    public function set(string $key, string $value, int $ttl = 0): bool;
+
+    /**
+     * @param string $key
+     * @return bool
+     */
+    public function delete(string $key): bool;
 }
