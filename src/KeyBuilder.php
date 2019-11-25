@@ -8,24 +8,16 @@ use Epignosis\Interfaces\KeyBuilderInterface;
 
 class KeyBuilder implements KeyBuilderInterface {
 
-    const NAMESPACE_SEPERATOR = ':';
-
     /**
      * @var array 
      */
-    protected $map = [];
-
-    /**
-     * @var string
-     */
-    protected $namespace;
+    protected $map;
 
     /**
      * @inheritdoc
      */
-    public function __construct($namespace, array $map)
+    public function __construct(array $map)
     {
-        $this->applyNamespace($namespace);
         $this->map = $map;
     }
 
@@ -56,30 +48,6 @@ class KeyBuilder implements KeyBuilderInterface {
     protected function map($key)
     {
         return isset($this->map[$key]) ? $this->map[$key] : $key;
-    }
-
-    /**
-     * @return callable|string
-     */
-    protected function getNamespace()
-    {
-        return $this->namespace;
-    }
-
-    /**
-     * @param callable|array $namespace
-     */
-    protected function applyNamespace($namespace): void
-    {
-        if (is_callable($namespace)) {
-            $namespace = $namespace();
-        }
-        
-        if (is_array($namespace)) {
-            $namespace = implode(static::NAMESPACE_SEPERATOR,$namespace);
-        }
-        
-        $this->namespace = sprintf('%s:', $namespace);
     }
 
     /**

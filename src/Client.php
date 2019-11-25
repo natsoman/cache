@@ -45,7 +45,7 @@ class Client {
     }
 
     /**
-     * It allows you to change cache connection on runtime
+     * It allows you to change cache on runtime
      *
      * @param CacheInterface $cache
      */
@@ -83,35 +83,45 @@ class Client {
      * @param $value
      * @param int $ttl
      */
-    public function set(string $key, $value, int $ttl = 0): void 
+    public function set(string $key, $value, int $ttl = 3600): void
     {
-        $this->cache->set(
-            $cacheKey = $this->keyBuilder->build($key),
-            $this->serializer->serialize($value),
-            $ttl
-        );
-        
+        $this->cache->set($cacheKey = $this->keyBuilder->build($key), $this->serializer->serialize($value), $ttl);
         $this->addToMemory($cacheKey,$value);
     }
 
     /**
-     * @param $key
+     * @param string|array $key
      * @return bool
      */
     public function delete($key): bool
     {
-        return $this->cache->delete(
-            $this->keyBuilder->build($key)
-        );
-    }
-    
-    public function mGet(array $keys) 
-    {
-        // TODO::implement
+        return $this->cache->delete($this->keyBuilder->build($key));
     }
 
+    /**
+     * @param array $keys
+     * @return array
+     */
+    public function mGet(array $keys) 
+    {
+        return $this->cache->multiGet($keys);
+    }
+
+    /**
+     * @param array $values
+     * @return bool
+     */
     public function mSet(array $values) 
     {
-        // TODO::implement
+        return $this->cache->multiSet($values);
+    }
+
+    /**
+     * @param array $keys
+     * @return bool
+     */
+    public function mDelete(array $keys)
+    {
+        return $this->cache->multiDelete(array_map(function ($v) { return $this->keyBuilder->build($v); }, $keys));
     }
 }

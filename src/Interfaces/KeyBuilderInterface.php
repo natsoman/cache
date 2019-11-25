@@ -7,10 +7,9 @@ namespace  Epignosis\Interfaces;
 interface KeyBuilderInterface {
 
     /**
-     * @param array|callable $namespace
      * @param array $map
      */
-    public function __construct($namespace ,array $map);
+    public function __construct(array $map);
 
     /**
      * @param string $key

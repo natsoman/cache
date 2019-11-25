@@ -6,7 +6,7 @@ namespace Epignosis;
 
 use \Epignosis\Interfaces\CacheInterface;
 
-class Cache implements CacheInterface {
+class RedisCache implements CacheInterface {
 
     /**
      * @var \Redis|\RedisCluster
@@ -34,10 +34,10 @@ class Cache implements CacheInterface {
      * @example
      * <pre>
      * // Connect on a standalone server
-     * new Cache(['host' => '127.0.0.1:6379']);
+     * new RedisCache(['host' => '127.0.0.1:6379']);
      *
      * // Connect on a cluster
-     * new Cache(['host' => ['127.0.0.1:7000','127.0.0.1:7001']]);
+     * new RedisCache(['host' => ['127.0.0.1:7000','127.0.0.1:7001']]);
      * </pre>
      */
     public function __construct($options)
@@ -72,7 +72,7 @@ class Cache implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function set(string $key, string $value, int $ttl = 0): bool
+    public function set(string $key, string $value, int $ttl = 3600): bool
     {
         return $this->service->setex($key, $ttl, $value);
     }
@@ -83,5 +83,29 @@ class Cache implements CacheInterface {
     public function delete(string $key): bool
     {
         return $this->service->del($key) === 1 ? true : false;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function multiGet(array $keys): array
+    {
+        return $this->service->mget($keys);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function multiSet(array $values): bool
+    {
+        return $this->service->mset($values);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function multiDelete(array $keys): bool
+    {
+        return $this->service->del($keys)  === count($keys) ? true : false;
     }
 }

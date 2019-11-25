@@ -7,14 +7,14 @@ use Epignosis\Serializers\Native;
 use Epignosis\{
     KeyBuilder,
     Client,
-    Cache
+    RedisCache
 };
 
 final class ClusterTest extends TestCase
 {
     public function testCanConnectOnCluster(): void
     {
-        $cache = new Cache([
+        $cache = new RedisCache([
             'host' => [
                 'redis-cluster:7000',
                 'redis-cluster:7001',
@@ -26,11 +26,10 @@ final class ClusterTest extends TestCase
         ]);
 
         $keyBuilder = new KeyBuilder(
-            ['Talent','Session'],
             [
-                'masterDomain' => function ($id = 1) { return sprintf('domain-%s',$id); },
-                'domainConfiguration' => function ($id = 1) { return sprintf('domain-configuration-%s',$id); },
-                'session' => function ($id = 1) { return sprintf('session-%s-%s', $id, $id); }
+                'masterDomain' => function ($id = 78) { return sprintf('Domain:%s',$id); },
+                'domainConfiguration' => function ($id = 78) { return sprintf('Domain:%s:Config:%s',$id,$id); },
+                'session' => function ($ws = 3, $id = 99) { return sprintf('Session:%s-%s', $ws, $id); }
             ]
         );
 

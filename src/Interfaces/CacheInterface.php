@@ -25,4 +25,22 @@ interface CacheInterface {
      * @return bool
      */
     public function delete(string $key): bool;
+
+    /**
+     * @param array $keys
+     * @return array
+     */
+    public function multiGet(array $keys): array;
+
+    /**
+     * @param array $values
+     * @return bool
+     */
+    public function multiSet(array $values): bool;
+
+    /**
+     * @param array $keys
+     * @return bool
+     */
+    public function multiDelete(array $keys): bool;
 }
