@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Epignosis\Interfaces;
 
-interface CacheInterface {
+interface ClientInterface {
 
     /**
      * @param string $key
@@ -18,7 +18,7 @@ interface CacheInterface {
      * @param int $ttl
      * @return bool
      */
-    public function set(string $key, string $value, int $ttl = 0): bool;
+    public function set(string $key, $value, int $ttl = 0): bool;
 
     /**
      * @param string $key
@@ -30,17 +30,17 @@ interface CacheInterface {
      * @param array $keys
      * @return array
      */
-    public function multiGet(array $keys): array;
+    public function mGet(array $keys);
 
     /**
      * @param array $values
      * @return bool
      */
-    public function multiSet(array $values): bool;
+    public function mSet(array $values): bool;
 
     /**
      * @param array $keys
      * @return bool
      */
-    public function multiDelete(array $keys): bool;
+    public function mDelete(array $keys): bool;
 }

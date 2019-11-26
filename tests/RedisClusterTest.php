@@ -1,21 +1,19 @@
 <?php
 
-declare(strict_types=1);
-
 use PHPUnit\Framework\TestCase;
 use Epignosis\Serializers\Igbinary;
 use Epignosis\{
     KeyBuilder,
-    Client,
-    RedisCache
+    Client
 };
 
-final class ClusterIgbinaryTest extends TestCase
+final class RedisClusterTest extends TestCase
 {
     public function testCanConnectOnCluster(): void
     {
-        $cache = new RedisCache([
-            'host' => [
+        $service = new \RedisCluster(
+            null,
+            [
                 'redis-cluster:7000',
                 'redis-cluster:7001',
                 'redis-cluster:7002',
@@ -23,7 +21,9 @@ final class ClusterIgbinaryTest extends TestCase
                 'redis-cluster:7004',
                 'redis-cluster:7005'
             ]
-        ]);
+        );
+
+        $cache = new Epignosis\Adapters\Redis($service);
 
         $keyBuilder = new KeyBuilder(
             [
