@@ -17,7 +17,7 @@ class Native implements SerializerInterface {
     /**
      * @inheritdoc
      */
-    public function deserialize(string $value)
+    public function deserialize(?string $value)
     {
         return unserialize($value);
     }

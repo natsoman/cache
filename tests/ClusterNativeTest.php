@@ -33,7 +33,7 @@ final class ClusterTest extends TestCase
         );
 
         $client = new Client(
-            new Epignosis\Adapters\Redis($service),
+            new Epignosis\Adapters\Apc(),
             new Native(),
             $keyBuilder,
             new Epignosis\Compressors\Zlib(6)

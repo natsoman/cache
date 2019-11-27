@@ -14,5 +14,5 @@ interface CompressorInterface {
      * @param mixed $value
      * @return mixed
      */
-    public function decompress($value);
+    public function uncompress($value);
 }

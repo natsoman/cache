@@ -2,11 +2,11 @@
 
 namespace Epignosis\Adapters;
 
-use Epignosis\Exceptions\InvalidServiceException;
 use RedisCluster;
 use Redis as PhpRedis;
 use Predis\Client as Predis;
 use Psr\SimpleCache\CacheInterface;
+use Epignosis\Exceptions\CacheException;
 
 class Redis implements CacheInterface {
 
@@ -17,14 +17,14 @@ class Redis implements CacheInterface {
 
     /**
      * @var PhpRedis|Predis|RedisCluster $service
-     * @throws InvalidServiceException
+     * @throws CacheException
      */
     public function __construct($service)
     {
         if ($service instanceof PhpRedis || $service instanceof Predis || $service instanceof RedisCluster) {
             $this->service = $service;
         } else {
-            throw new InvalidServiceException('Service must be instance of Redis, RedisCluster or Predis');
+            throw new CacheException('Service must be instance of Redis, RedisCluster or Predis');
         }
     }
 
@@ -54,33 +54,29 @@ class Redis implements CacheInterface {
 
     /**
      * @inheritdoc
-     * @param array $keys
-     * @return array
      */
     public function getMultiple($keys, $default = null): array
     {
         return array_map(
             function ($v) use ($default) { return $v === false ? $default : $v; },
-            $this->service->mget($keys)
+            $this->service->mget((array)$keys)
         );
     }
 
     /**
      * @inheritdoc
-     * @param array $values
      */
     public function setMultiple($values,$ttl = null): bool
     {
-        return $this->service->mset($values);
+        return $this->service->mset((array)$values);
     }
 
     /**
      * @inheritdoc
-     * @param array $keys
      */
     public function deleteMultiple($keys): bool
     {
-        return $this->service->del($keys) === count($keys) ? true : false;
+        return $this->service->del($keys) === count((array)$keys) ? true : false;
     }
 
     /**

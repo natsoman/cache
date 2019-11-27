@@ -57,9 +57,7 @@ class Client implements ClientInterface {
     }
 
     /**
-     * @param string $key
-     * @param callable $callback
-     * @return mixed|null
+     * @inheritdoc
      */
     public function get(string $key,callable $callback = null)
     {
@@ -71,10 +69,10 @@ class Client implements ClientInterface {
         }
 
         try {
-            $value = $this->serializer->deserialize($this->compressor->decompress($this->cache->get($cacheKey)));
+            $value = $this->serializer->deserialize($this->compressor->uncompress($this->cache->get($cacheKey)));
         } catch (InvalidArgumentException $e) {}
 
-        if ($value === null) {
+        if ($value === null || $value === false) {
             if (($value = $callback()) !== null) {
                 $this->set($key, $value);
             }
@@ -87,12 +85,9 @@ class Client implements ClientInterface {
     }
 
     /**
-     * @param string $key
-     * @param $value
-     * @param int $ttl
-     * @return bool
+     * @inheritdoc
      */
-    public function set(string $key, $value, int $ttl = -1): bool
+    public function set(string $key, $value, int $ttl = 0): bool
     {
         $status = false;
 
@@ -113,8 +108,7 @@ class Client implements ClientInterface {
     }
 
     /**
-     * @param string|array $key
-     * @return bool
+     * @inheritdoc
      */
     public function delete(string $key): bool
     {
@@ -128,26 +122,26 @@ class Client implements ClientInterface {
     }
 
     /**
-     * @param array $keys
-     * @return iterable
-     * @throws InvalidKeyException
+     * @inheritdoc
      */
     public function mGet(array $keys)
     {
         list($found, $notFound) = $this->searchKeys($keys);
 
         try {
-            return array_merge($this->cache->getMultiple($notFound), $found);
+            return array_merge(
+                $this->serializer->deserialize(
+                    $this->compressor->uncompress((array)$this->cache->getMultiple($notFound))
+                ),
+                $found
+            );
         } catch (InvalidArgumentException $e) {
             throw new InvalidKeyException();
         }
     }
 
     /**
-     * @param array $values
-     * @param int $ttl
-     * @return bool
-     * @throws InvalidKeyException
+     * @inheritdoc
      */
     public function mSet(array $values, $ttl = -1): bool
     {
@@ -170,23 +164,31 @@ class Client implements ClientInterface {
     }
 
     /**
-     * @param array $keys
-     * @return bool
-     * @throws InvalidArgumentException
+     * @inheritdoc
      */
     public function mDelete(array $keys): bool
     {
-        $keys = array_map(function ($v) { return $this->keyBuilder->build($v); }, $keys);
+        $keys = array_map(function ($v) {
+            return $this->keyBuilder->build($v);
+        }, $keys);
 
-        array_walk($keys,function ($v) {
-            $this->deleteFromMemory($v);
-        });
+        try {
+            $status = $this->cache->deleteMultiple($keys);
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidKeyException();
+        }
 
-        return $this->cache->deleteMultiple($keys);
+        if ($status) {
+            array_walk($keys, function ($v) {
+                $this->deleteFromMemory($v);
+            });
+        }
+
+        return $status;
     }
 
     /**
-     * @return KeyBuilderInterface
+     * @inheritdoc
      */
     public function getKeyBuilder(): KeyBuilderInterface
     {

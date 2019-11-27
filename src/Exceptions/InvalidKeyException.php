@@ -8,7 +8,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class InvalidKeyException extends Exception implements InvalidArgumentException {
 
-    protected $message = 'The key type is not valid';
+    protected $message = 'Key type is not valid';
 
     public function __construct(string $message = null, int $code = 0, Throwable $previous = null)
     {

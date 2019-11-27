@@ -2,6 +2,7 @@
 
 namespace Epignosis;
 
+use Epignosis\Exceptions\InvalidKeyException;
 use Epignosis\Interfaces\KeyBuilderInterface;
 
 class KeyBuilder implements KeyBuilderInterface {
@@ -23,6 +24,7 @@ class KeyBuilder implements KeyBuilderInterface {
      * @param string $key
      * @param mixed $args
      * @return string
+     * @throws InvalidKeyException
      */
     public function build(string $key, ...$args): string
     {
@@ -36,7 +38,7 @@ class KeyBuilder implements KeyBuilderInterface {
             return $cacheKey(...$args);
         }
         
-        throw new \InvalidArgumentException('Key cannot be mapped to a cache key.');
+        throw new InvalidKeyException('Key cannot be mapped to a cache key.');
     }
 
     /**

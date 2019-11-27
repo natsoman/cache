@@ -2,9 +2,20 @@
 
 namespace Epignosis\Adapters;
 
+use Epignosis\Exceptions\CacheException;
 use Psr\SimpleCache\CacheInterface;
 
 class Apc implements CacheInterface {
+
+    /**
+     * @throws CacheException
+     */
+    public function __construct()
+    {
+        if (!extension_loaded('apc')) {
+            throw new CacheException('Caching extension is missing');
+        }
+    }
 
     /**
      * @inheritdoc
@@ -19,7 +30,7 @@ class Apc implements CacheInterface {
      */
     public function set($key, $value, $ttl = null)
     {
-        return apcu_store($key,$value, $ttl);
+        return apc_store($key,$value, $ttl);
     }
 
     /**
@@ -32,7 +43,6 @@ class Apc implements CacheInterface {
 
     /**
      * @inheritdoc
-     * @param array $keys
      */
     public function getMultiple($keys, $default = null)
     {
@@ -41,16 +51,14 @@ class Apc implements CacheInterface {
 
     /**
      * @inheritdoc
-     * @param array $values
      */
     public function setMultiple($values,$ttl = null)
     {
-        return apcu_store($values);
+        return apc_store($values);
     }
 
     /**
      * @inheritdoc
-     * @param array $keys
      */
     public function deleteMultiple($keys)
     {
