@@ -21,10 +21,10 @@ class KeyBuilder implements KeyBuilderInterface {
 
     /**
      * @param string $key
-     * @param $args
-     * @return string|null
+     * @param mixed $args
+     * @return string
      */
-    public function build(string $key, ...$args):? string
+    public function build(string $key, ...$args): string
     {
         $cacheKey = $this->map($key);
 
@@ -36,12 +36,12 @@ class KeyBuilder implements KeyBuilderInterface {
             return $cacheKey(...$args);
         }
         
-        throw new \InvalidArgumentException('Argument cannot be mapped to a cache key.');
+        throw new \InvalidArgumentException('Key cannot be mapped to a cache key.');
     }
 
     /**
      * @param $key
-     * @return string|callable
+     * @return mixed
      */
     protected function map($key)
     {

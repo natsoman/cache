@@ -2,6 +2,7 @@
 
 namespace Epignosis;
 
+use Epignosis\Exceptions\InvalidKeyException;
 use Psr\SimpleCache\{
     CacheInterface,
     InvalidArgumentException
@@ -9,7 +10,8 @@ use Psr\SimpleCache\{
 use Epignosis\Interfaces\{
     KeyBuilderInterface,
     SerializerInterface,
-    ClientInterface
+    ClientInterface,
+    CompressorInterface
 };
 
 class Client implements ClientInterface {
@@ -32,25 +34,32 @@ class Client implements ClientInterface {
     protected $keyBuilder;
 
     /**
+     * @var CompressorInterface
+     */
+    protected $compressor;
+
+    /**
      * @param CacheInterface $cache
      * @param SerializerInterface $serializer
      * @param KeyBuilderInterface $keyBuilder
+     * @param CompressorInterface $compressor
      */
     public function __construct(
         CacheInterface $cache,
         SerializerInterface $serializer,
-        KeyBuilderInterface $keyBuilder
+        KeyBuilderInterface $keyBuilder,
+        CompressorInterface $compressor
     ) {
         $this->cache = $cache;
         $this->serializer = $serializer;
         $this->keyBuilder = $keyBuilder;
+        $this->compressor = $compressor;
     }
 
     /**
      * @param string $key
      * @param callable $callback
      * @return mixed|null
-     * @throws InvalidArgumentException
      */
     public function get(string $key,callable $callback = null)
     {
@@ -61,7 +70,10 @@ class Client implements ClientInterface {
             return $value;
         }
 
-        $value = $this->cache->get($cacheKey);
+        try {
+            $value = $this->serializer->deserialize($this->compressor->decompress($this->cache->get($cacheKey)));
+        } catch (InvalidArgumentException $e) {}
+
         if ($value === null) {
             if (($value = $callback()) !== null) {
                 $this->set($key, $value);
@@ -78,43 +90,83 @@ class Client implements ClientInterface {
      * @param string $key
      * @param $value
      * @param int $ttl
-     * @throws InvalidArgumentException
+     * @return bool
      */
-    public function set(string $key, $value, int $ttl = 3600): void
+    public function set(string $key, $value, int $ttl = -1): bool
     {
-        $this->cache->set($cacheKey = $this->keyBuilder->build($key), $this->serializer->serialize($value), $ttl);
-        $this->addToMemory($cacheKey,$value);
+        $status = false;
+
+        try {
+            $status = $this->cache->set(
+                $cacheKey = $this->keyBuilder->build($key),
+                $this->compressor->compress($this->serializer->serialize($value)),
+                $ttl
+            );
+
+            if ($status === true) {
+                $this->addToMemory($cacheKey, $value);
+            }
+
+        } catch (InvalidArgumentException $e) {}
+
+        return $status;
     }
 
     /**
      * @param string|array $key
      * @return bool
-     * @throws InvalidArgumentException
      */
     public function delete(string $key): bool
     {
-        return $this->cache->delete($this->keyBuilder->build($key));
+        $status = false;
+
+        try {
+            $status = $this->cache->delete($this->keyBuilder->build($key));
+        } catch (InvalidArgumentException $e) {}
+
+        return $status;
     }
 
     /**
      * @param array $keys
      * @return iterable
-     * @throws InvalidArgumentException
+     * @throws InvalidKeyException
      */
     public function mGet(array $keys)
     {
-        return $this->cache->getMultiple($keys);
+        list($found, $notFound) = $this->searchKeys($keys);
+
+        try {
+            return array_merge($this->cache->getMultiple($notFound), $found);
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidKeyException();
+        }
     }
 
     /**
      * @param array $values
      * @param int $ttl
      * @return bool
-     * @throws InvalidArgumentException
+     * @throws InvalidKeyException
      */
-    public function mSet(array $values, $ttl = null)
+    public function mSet(array $values, $ttl = -1): bool
     {
-        return $this->cache->setMultiple($values, $ttl);
+        array_walk($values, function (&$v, &$k) {
+            $k = $this->keyBuilder->build($k);
+            $v = $this->compressor->compress($this->serializer->serialize($v));
+        });
+
+        try {
+            $status = $this->cache->setMultiple($values, $ttl);
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidKeyException();
+        }
+
+        if ($status) {
+            $this->setToMemory($values);
+        }
+
+        return $status;
     }
 
     /**
@@ -122,8 +174,22 @@ class Client implements ClientInterface {
      * @return bool
      * @throws InvalidArgumentException
      */
-    public function mDelete(array $keys)
+    public function mDelete(array $keys): bool
     {
-        return $this->cache->deleteMultiple(array_map(function ($v) { return $this->keyBuilder->build($v); }, $keys));
+        $keys = array_map(function ($v) { return $this->keyBuilder->build($v); }, $keys);
+
+        array_walk($keys,function ($v) {
+            $this->deleteFromMemory($v);
+        });
+
+        return $this->cache->deleteMultiple($keys);
+    }
+
+    /**
+     * @return KeyBuilderInterface
+     */
+    public function getKeyBuilder(): KeyBuilderInterface
+    {
+        return $this->keyBuilder;
     }
 }

@@ -24,7 +24,7 @@ class Redis implements CacheInterface {
         if ($service instanceof PhpRedis || $service instanceof Predis || $service instanceof RedisCluster) {
             $this->service = $service;
         } else {
-            throw new InvalidServiceException('Service must be on of Redis, RedisCluster or Predis');
+            throw new InvalidServiceException('Service must be instance of Redis, RedisCluster or Predis');
         }
     }
 
@@ -39,7 +39,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function set($key, $value, $ttl = null)
+    public function set($key, $value, $ttl = null): bool
     {
         return $this->service->setex($key, $ttl, $value);
     }
@@ -47,7 +47,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function delete($key)
+    public function delete($key): bool
     {
         return $this->service->del($key) === 1 ? true : false;
     }
@@ -55,8 +55,9 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      * @param array $keys
+     * @return array
      */
-    public function getMultiple($keys, $default = null)
+    public function getMultiple($keys, $default = null): array
     {
         return array_map(
             function ($v) use ($default) { return $v === false ? $default : $v; },
@@ -77,7 +78,7 @@ class Redis implements CacheInterface {
      * @inheritdoc
      * @param array $keys
      */
-    public function deleteMultiple($keys)
+    public function deleteMultiple($keys): bool
     {
         return $this->service->del($keys) === count($keys) ? true : false;
     }
@@ -85,7 +86,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function clear()
+    public function clear(): bool
     {
         return $this->service->flushAll();
     }
@@ -93,7 +94,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function has($key)
+    public function has($key): bool
     {
         return $this->service->exists($key) === 1 ? true : false;
     }

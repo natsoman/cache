@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Epignosis\Serializers;
 
 use Epignosis\Interfaces\SerializerInterface;
@@ -13,7 +11,7 @@ class Igbinary implements SerializerInterface {
      */
     public function serialize($value):string 
     {
-        return \igbinary_serialize($value);
+        return igbinary_serialize($value);
     }
 
     /**
@@ -21,6 +19,6 @@ class Igbinary implements SerializerInterface {
      */
     public function deserialize(string $value) 
     {
-        return \igbinary_serialize($value);
+        return igbinary_unserialize($value);
     }
 }

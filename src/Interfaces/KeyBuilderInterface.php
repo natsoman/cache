@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace  Epignosis\Interfaces;
 
 interface KeyBuilderInterface {
@@ -13,7 +11,8 @@ interface KeyBuilderInterface {
 
     /**
      * @param string $key
-     * @return mixed
+     * @param mixed ...$args
+     * @return string
      */
-    public function build(string $key);
+    public function build(string $key, ...$args);
 }

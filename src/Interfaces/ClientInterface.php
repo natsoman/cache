@@ -1,8 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Epignosis\Interfaces;
+
+use Epignosis\Exceptions\InvalidKeyException;
 
 interface ClientInterface {
 
@@ -29,18 +29,26 @@ interface ClientInterface {
     /**
      * @param array $keys
      * @return array
+     * @throws InvalidKeyException
      */
     public function mGet(array $keys);
 
     /**
      * @param array $values
      * @return bool
+     * @throws InvalidKeyException
      */
     public function mSet(array $values): bool;
 
     /**
      * @param array $keys
      * @return bool
+     * @throws InvalidKeyException
      */
     public function mDelete(array $keys): bool;
+
+    /**
+     * @return KeyBuilderInterface
+     */
+    public function getKeyBuilder(): KeyBuilderInterface;
 }

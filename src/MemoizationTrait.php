@@ -22,7 +22,7 @@ trait MemoizationTrait {
      * @param string $key
      * @return mixed|null
      */
-    protected function getFromMemory(string $key) 
+    protected function getFromMemory(string $key)
     {
         return $this->memory[$key] ?? null;
     }
@@ -41,6 +41,25 @@ trait MemoizationTrait {
     protected function setToMemory(array $values): void 
     {
         $this->memory = array_merge($this->memory, $values);
+    }
+
+    /**
+     * @param array $keys
+     * @return array
+     */
+    protected function searchKeys(array $keys): array
+    {
+        $found = $notFound = [];
+
+        foreach($keys as $key) {
+            if (isset($this->memory[$key])) {
+                $found[$key] = $this->memory[$key];
+            } else {
+                $notFound[$key] = null;
+            }
+        }
+
+        return [$found,$notFound];
     }
 
     protected function cleanMemory(): void

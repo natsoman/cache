@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Epignosis\Serializers;
 
 use Epignosis\Interfaces\SerializerInterface;
@@ -13,7 +11,7 @@ class Native implements SerializerInterface {
      */
     public function serialize($value): string
     {
-        return \serialize($value);
+        return serialize($value);
     }
 
     /**
@@ -21,6 +19,6 @@ class Native implements SerializerInterface {
      */
     public function deserialize(string $value)
     {
-        return \unserialize($value);
+        return unserialize($value);
     }
 }
