@@ -69,14 +69,20 @@ class Client implements ClientInterface {
         }
 
         try {
-            $value = $this->serializer->deserialize($this->compressor->uncompress($this->cache->get($cacheKey)));
+            $value = $this->serializer->deserialize(
+                $this->compressor->uncompress(
+                    $this->cache->get($cacheKey)
+                )
+            );
         } catch (InvalidArgumentException $e) {}
 
-        if ($value === null) {
+        if ($value === null && is_string($callback)) {
             if (($value = $callback()) !== null) {
                 $this->set($key, $value);
             }
-        } else {
+        }
+
+        if ($value !== null) {
             $this->addToMemory($cacheKey, $value);
             return $value;
         }
@@ -87,7 +93,7 @@ class Client implements ClientInterface {
     /**
      * @inheritdoc
      */
-    public function set(string $key, $value, int $ttl = 0): bool
+    public function set(string $key, $value, int $ttl = 3600): bool
     {
         $status = false;
 
@@ -126,18 +132,26 @@ class Client implements ClientInterface {
      */
     public function mGet(array $keys)
     {
-        list($found, $notFound) = $this->searchKeys($keys);
+        list($cached, $missedKey) = $this->searchKeys($keys);
 
         try {
-            return array_merge(
-                $this->serializer->deserialize(
-                    $this->compressor->uncompress((array)$this->cache->getMultiple($notFound))
-                ),
-                $found
-            );
+            if (count($missedKey) > 0) {
+                array_walk($missedKey, function (&$v) {
+                    $this->keyBuilder->build($v);
+                });
+
+                $notFound = (array)$this->cache->getMultiple(array_values($missedKey), null);
+                array_walk($notFound, function (&$value) {
+                    $value = $this->serializer->deserialize($this->compressor->uncompress($value));
+                });
+
+                return array_merge($cached, $notFound);
+            }
         } catch (InvalidArgumentException $e) {
             throw new InvalidKeyException();
         }
+
+        return $cached;
     }
 
     /**
@@ -145,13 +159,14 @@ class Client implements ClientInterface {
      */
     public function mSet(array $values, $ttl = -1): bool
     {
-        array_walk($values, function (&$v, &$k) {
+        $encodedValues = $values;
+        array_walk($encodedValues, function (&$v, &$k) {
             $k = $this->keyBuilder->build($k);
             $v = $this->compressor->compress($this->serializer->serialize($v));
         });
 
         try {
-            $status = $this->cache->setMultiple($values, $ttl);
+            $status = $this->cache->setMultiple($encodedValues, $ttl);
         } catch (InvalidArgumentException $e) {
             throw new InvalidKeyException();
         }

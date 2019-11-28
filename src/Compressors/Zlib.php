@@ -22,16 +22,20 @@ class Zlib implements CompressorInterface {
     /**
      * @inheritdoc
      */
-    public function compress($value): string
+    public function compress(?string $value): string
     {
-        return ($value === null) ? null : gzcompress($value, $this->level);
+        return gzcompress($value, $this->level);
     }
 
     /**
      * @inheritdoc
      */
-    public function uncompress($value)
+    public function uncompress(?string $value)
     {
-        return ($value === null) ? null : gzuncompress($value);
+        if ($value !== null) {
+            return gzuncompress($value);
+        }
+
+        return null;
     }
 }

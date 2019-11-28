@@ -10,12 +10,19 @@ trait MemoizationTrait {
     protected $memory = [];
 
     /**
+     * @var bool
+     */
+    protected $use = true;
+
+    /**
      * @param string $key
      * @param $value
      */
     protected function addToMemory(string $key, $value): void 
     {
-        $this->memory[$key] = $value;
+        if ($this->useMemoization()) {
+            $this->memory[$key] = $value;
+        }
     }
 
     /**
@@ -24,7 +31,11 @@ trait MemoizationTrait {
      */
     protected function getFromMemory(string $key)
     {
-        return $this->memory[$key] ?? null;
+        if ($this->useMemoization()) {
+            return $this->memory[$key] ?? null;
+        }
+
+        return null;
     }
 
     /**
@@ -40,7 +51,9 @@ trait MemoizationTrait {
      */
     protected function setToMemory(array $values): void 
     {
-        $this->memory = array_merge($this->memory, $values);
+        if ($this->useMemoization()) {
+            $this->memory = array_merge($this->memory, $values);
+        }
     }
 
     /**
@@ -49,6 +62,10 @@ trait MemoizationTrait {
      */
     protected function searchKeys(array $keys): array
     {
+        if (!$this->useMemoization()) {
+            return [[], $keys];
+        }
+
         $found = $notFound = [];
 
         foreach($keys as $key) {
@@ -65,5 +82,12 @@ trait MemoizationTrait {
     protected function cleanMemory(): void
     {
         $this->memory = [];
+    }
+
+    /**
+     * @return bool
+     */
+    protected function useMemoization() {
+        return $this->use;
     }
 }

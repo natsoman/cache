@@ -19,6 +19,10 @@ class Native implements SerializerInterface {
      */
     public function deserialize(?string $value)
     {
-        return unserialize($value);
+        if ($value !== null) {
+            return unserialize($value);
+        }
+
+        return $value;
     }
 }

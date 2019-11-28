@@ -31,7 +31,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function get($key, $default = null)
+    public function get($key, $default = null):? string
     {
         return ($value = $this->service->get($key)) !== false ? $value : $default;
     }
@@ -41,7 +41,7 @@ class Redis implements CacheInterface {
      */
     public function set($key, $value, $ttl = null): bool
     {
-        return $this->service->setex($key, $ttl, $value);
+        return $this->service->setex($key, $ttl ?? 3600, $value);
     }
 
     /**
@@ -57,10 +57,15 @@ class Redis implements CacheInterface {
      */
     public function getMultiple($keys, $default = null): array
     {
-        return array_map(
-            function ($v) use ($default) { return $v === false ? $default : $v; },
-            $this->service->mget((array)$keys)
-        );
+        $cacheRecords = $this->service->mget((array)$keys);
+
+        foreach ($cacheRecords as &$value) {
+            if ($value === false) {
+                $value = $default;
+            }
+        }
+
+        return array_combine((array)$keys, $cacheRecords);
     }
 
     /**

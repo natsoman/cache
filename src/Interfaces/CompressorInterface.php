@@ -8,11 +8,11 @@ interface CompressorInterface {
      * @param mixed $value
      * @return mixed
      */
-    public function compress($value);
+    public function compress(string $value);
 
     /**
      * @param mixed $value
      * @return mixed
      */
-    public function uncompress($value);
+    public function uncompress(?string $value);
 }
