@@ -72,7 +72,7 @@ class Client implements ClientInterface {
             $value = $this->serializer->deserialize($this->compressor->uncompress($this->cache->get($cacheKey)));
         } catch (InvalidArgumentException $e) {}
 
-        if ($value === null || $value === false) {
+        if ($value === null) {
             if (($value = $callback()) !== null) {
                 $this->set($key, $value);
             }
@@ -186,6 +186,14 @@ class Client implements ClientInterface {
 
         return $status;
     }
+
+	/**
+	 * @inheritdoc
+	 */
+    public function has(string $key): bool
+	{
+    	return $this->cache->has($key);
+	}
 
     /**
      * @inheritdoc

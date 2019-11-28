@@ -1,48 +1,141 @@
 <?php
 
+declare(strict_types=1);
+
+namespace Epignosis\Tests;
+
+use Epignosis\KeyBuilder;
 use PHPUnit\Framework\TestCase;
-use Epignosis\Serializers\Igbinary;
-use Epignosis\{
-    KeyBuilder,
-    Client
-};
 
 final class RedisClusterTest extends TestCase
 {
-    public function testCanConnectOnCluster(): void
-    {
-        $service = new \RedisCluster(
-            null,
-            [
-                'redis-cluster:7000',
-                'redis-cluster:7001',
-                'redis-cluster:7002',
-                'redis-cluster:7003',
-                'redis-cluster:7004',
-                'redis-cluster:7005'
-            ]
-        );
+	public function keyProvider()
+	{
+		return [
+			['testKey']
+		];
+	}
 
-        $cache = new Epignosis\Adapters\Redis($service);
+	public function valueProvider()
+	{
+		return [
+			['testValue']
+		];
+	}
 
-        $keyBuilder = new KeyBuilder(
-            [
-                'masterDomain' => function ($id = 78) { return sprintf('Domain:%s',$id); },
-                'domainConfiguration' => function ($id = 78) { return sprintf('Domain:%s:Config:%s',$id,$id); },
-                'session' => function ($ws = 3, $id = 99) { return sprintf('Session:%s-%s', $ws, $id); }
-            ]
-        );
-        
-        $client = new Client($cache, new Igbinary(),$keyBuilder);
+	public function testConnection()
+	{
+		$service = new \RedisCluster(
+			null,
+			[
+				'redis-cluster:7000',
+				'redis-cluster:7001',
+				'redis-cluster:7002',
+				'redis-cluster:7003',
+				'redis-cluster:7004',
+				'redis-cluster:7005'
+			]
+		);
 
-        $key = 'domainConfiguration';
-        $value = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.';
+		$keyBuilder = new KeyBuilder(
+			[
+				'masterDomain' => function ($id = 0) { return sprintf('Domain:%s',$id); },
+				'domainConfiguration' => function ($id = 0) { return sprintf('Domain:%s:Config',$id); },
+				'session' => function ($ws = 0, $id = 0) { return sprintf('Session:%s-%s', $ws, $id); }
+			]
+		);
 
-        $client->set($key, $value);
-        $cachedValue = $client->get($key, function () { return null; });
-        
-        $this->assertSame($value, $cachedValue);
-        
-        $client->delete($key);
-    }
+		$client = new \Epignosis\Client(
+			new \Epignosis\Adapters\Redis($service),
+			new \Epignosis\Serializers\Native(),
+			$keyBuilder,
+			new \Epignosis\Compressors\Zlib(6)
+		);
+
+		$this->assertSame(\Epignosis\Client::class,get_class($client));
+
+		return $client;
+	}
+
+	/**
+	 * @depends testConnection
+	 * @dataProvider keyProvider
+	 * @dataProvider valueProvider
+	 */
+	public function testSet($client, $key, $value)
+	{
+		$set = $client->set($key, $value);
+		$this->assertSame(true, $set, 'Caching failed');
+	}
+
+	/**
+	 * @depends testConnection
+	 * @depends testSet
+	 * @dataProvider keyProvider
+	 */
+	public function testGet($client, $cachedValue, $key)
+	{
+		$get = $client->get($key);
+		$this->assertSame($cachedValue, $get, 'Cached value differs from the expected');
+	}
+
+	/**
+	 * @depends testConnection
+	 * @depends testSet
+	 * @dataProvider keyProvider
+	 */
+	public function testHas($client, $set, $key)
+	{
+		$has = $client->has($key);
+		$this->assertSame($set, $has, 'Key is still there');
+	}
+
+	/**
+	 * @depends testConnection
+	 * @dataProvider keyProvider
+	 */
+	public function testDelete($client, $key)
+	{
+		$delete = $client->delete($key);
+		$this->assertSame(true, $delete, 'Delete action fail');
+	}
+
+	/**
+	 * @depends testConnection
+	 * @depends testDelete
+	 */
+	public function testHasNot($client)
+	{
+		$has = $client->has($this->getKey());
+		$this->assertSame(false, $has, 'Key is still there');
+	}
+
+	/**
+	 * @depends testConnection
+	 */
+	public function testSetMultiple($client)
+	{
+		$mSet = $client->mSet($values);
+		$this->assertSame(true, $mSet, '[Multi] Keys cannot be cached');
+	}
+
+	/**
+	 * @depends testConnection
+	 * @depends testSetMultiple
+	 */
+	public function testGetMultiple($client)
+	{
+		$mGet = $client->mGet($keys);
+		$this->assertSame($values, $mGet, 'Cached value differs from the expected');
+	}
+
+	/**
+	 * @depends testConnection
+	 * @depends testGetMultiple
+	 */
+	public function deleteMultiple($client)
+	{
+		$client->mDelete($keys);
+		$this->assertSame(true, $mSet, '[Multi] Keys cannot be deleted');
+	}
 }

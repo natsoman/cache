@@ -47,6 +47,12 @@ interface ClientInterface {
      */
     public function mDelete(array $keys): bool;
 
+	/**
+	 * @param string $key
+	 * @return bool
+	 */
+	public function has(string $key): bool;
+
     /**
      * @return KeyBuilderInterface
      */

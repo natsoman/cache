@@ -92,6 +92,6 @@ class Redis implements CacheInterface {
      */
     public function has($key): bool
     {
-        return $this->service->exists($key) === 1 ? true : false;
+        return $this->service->exists($key);
     }
 }

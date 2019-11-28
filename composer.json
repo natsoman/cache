@@ -6,13 +6,18 @@
     "authors": [
         {
             "name": "TalentLMS Team",
-            "email": "knatsopoulos@epignosishq.com"
+            "email": "talentlms@talentlms.com"
         }
     ],
     "minimum-stability": "dev",
     "autoload": {
-        "psr-4": { "Epignosis\\": "src/" },
+        "psr-4": {
+            "Epignosis\\": "src/"
+        },
         "classmap": ["src/"]
+    },
+    "autoload-dev": {
+        "psr-4": { "Epignosis\\Tests\\": "tests/" }
     },
     "require": {
         "php" : "^7.1",
