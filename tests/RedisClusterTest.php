@@ -9,17 +9,22 @@ use PHPUnit\Framework\TestCase;
 
 final class RedisClusterTest extends TestCase
 {
-	public function keyProvider()
+	public function provider()
 	{
 		return [
-			['testKey']
-		];
-	}
-
-	public function valueProvider()
-	{
-		return [
-			['testValue']
+			[
+				'string' => ['testValue'],
+				'null' => [null],
+				'false' => [false],
+				'true' => [true],
+				'object' => [new \stdClass()],
+				'int' => [1],
+				'nestedArrays' => [[[],[]]],
+				'closure' => [function() {return false;}]
+			],
+			[
+				'test'
+			]
 		];
 	}
 
@@ -59,13 +64,12 @@ final class RedisClusterTest extends TestCase
 
 	/**
 	 * @depends testConnection
-	 * @dataProvider keyProvider
-	 * @dataProvider valueProvider
+	 * @dataProvider provider
 	 */
-	public function testSet($client, $key, $value)
+	public function testSet($client, $value, $key)
 	{
 		$set = $client->set($key, $value);
-		$this->assertSame(true, $set, 'Caching failed');
+		$this->assertSame(true, $set, 'SET operation failure');
 	}
 
 	/**
@@ -76,7 +80,7 @@ final class RedisClusterTest extends TestCase
 	public function testGet($client, $cachedValue, $key)
 	{
 		$get = $client->get($key);
-		$this->assertSame($cachedValue, $get, 'Cached value differs from the expected');
+		$this->assertSame($cachedValue, $get, 'GET operation failure');
 	}
 
 	/**
@@ -87,7 +91,7 @@ final class RedisClusterTest extends TestCase
 	public function testHas($client, $set, $key)
 	{
 		$has = $client->has($key);
-		$this->assertSame($set, $has, 'Key is still there');
+		$this->assertSame($set, $has, 'HAS operation failure');
 	}
 
 	/**
@@ -97,7 +101,7 @@ final class RedisClusterTest extends TestCase
 	public function testDelete($client, $key)
 	{
 		$delete = $client->delete($key);
-		$this->assertSame(true, $delete, 'Delete action fail');
+		$this->assertSame(true, $delete, 'DELETE operation failure');
 	}
 
 	/**
@@ -107,7 +111,7 @@ final class RedisClusterTest extends TestCase
 	public function testHasNot($client)
 	{
 		$has = $client->has($this->getKey());
-		$this->assertSame(false, $has, 'Key is still there');
+		$this->assertSame(false, $has, 'HAS not operation failure');
 	}
 
 	/**
@@ -116,7 +120,7 @@ final class RedisClusterTest extends TestCase
 	public function testSetMultiple($client)
 	{
 		$mSet = $client->mSet($values);
-		$this->assertSame(true, $mSet, '[Multi] Keys cannot be cached');
+		$this->assertSame(true, $mSet, 'mSet operation failure');
 	}
 
 	/**
@@ -126,7 +130,7 @@ final class RedisClusterTest extends TestCase
 	public function testGetMultiple($client)
 	{
 		$mGet = $client->mGet($keys);
-		$this->assertSame($values, $mGet, 'Cached value differs from the expected');
+		$this->assertSame($values, $mGet, 'mGet operation failure');
 	}
 
 	/**
@@ -136,6 +140,6 @@ final class RedisClusterTest extends TestCase
 	public function deleteMultiple($client)
 	{
 		$client->mDelete($keys);
-		$this->assertSame(true, $mSet, '[Multi] Keys cannot be deleted');
+		$this->assertSame(true, $mSet, 'mDelete operation failure');
 	}
 }
