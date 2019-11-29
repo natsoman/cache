@@ -56,5 +56,5 @@ interface ClientInterface {
     /**
      * @return KeyBuilderInterface
      */
-    public function getKeyBuilder(): KeyBuilderInterface;
+    public function buildKey($key, ...$args): string;
 }

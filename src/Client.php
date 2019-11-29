@@ -29,26 +29,26 @@ class Client implements ClientInterface {
     protected $serializer;
 
     /**
-     * @var KeyBuilderInterface
+     * @var KeyBuilderInterface|null
      */
     protected $keyBuilder;
 
     /**
-     * @var CompressorInterface
+     * @var CompressorInterface|null
      */
     protected $compressor;
 
     /**
      * @param CacheInterface $cache
      * @param SerializerInterface $serializer
-     * @param KeyBuilderInterface $keyBuilder
-     * @param CompressorInterface $compressor
+     * @param KeyBuilderInterface|null $keyBuilder
+     * @param CompressorInterface|null $compressor
      */
     public function __construct(
         CacheInterface $cache,
         SerializerInterface $serializer,
-        KeyBuilderInterface $keyBuilder,
-        CompressorInterface $compressor
+        KeyBuilderInterface $keyBuilder = null,
+        CompressorInterface $compressor = null
     ) {
         $this->cache = $cache;
         $this->serializer = $serializer;
@@ -61,7 +61,7 @@ class Client implements ClientInterface {
      */
     public function get(string $key,callable $callback = null)
     {
-        $cacheKey = $this->keyBuilder->build($key);
+        $cacheKey = $this->buildKey($key);
         $value = $this->getFromMemory($cacheKey);
 
         if ($value !== null) {
@@ -69,11 +69,7 @@ class Client implements ClientInterface {
         }
 
         try {
-            $value = $this->serializer->deserialize(
-                $this->compressor->uncompress(
-                    $this->cache->get($cacheKey)
-                )
-            );
+            $value = $this->decode($this->cache->get($value));
         } catch (InvalidArgumentException $e) {}
 
         if ($value === null && is_string($callback)) {
@@ -98,12 +94,7 @@ class Client implements ClientInterface {
         $status = false;
 
         try {
-            $status = $this->cache->set(
-                $cacheKey = $this->keyBuilder->build($key),
-                $this->compressor->compress($this->serializer->serialize($value)),
-                $ttl
-            );
-
+            $status = $this->cache->set($cacheKey = $this->buildKey($key), $this->encode($value), $ttl);
             if ($status === true) {
                 $this->addToMemory($cacheKey, $value);
             }
@@ -121,7 +112,7 @@ class Client implements ClientInterface {
         $status = false;
 
         try {
-            $status = $this->cache->delete($this->keyBuilder->build($key));
+            $status = $this->cache->delete($this->buildKey($key));
         } catch (InvalidArgumentException $e) {}
 
         return $status;
@@ -137,12 +128,12 @@ class Client implements ClientInterface {
         try {
             if (count($missedKey) > 0) {
                 array_walk($missedKey, function (&$v) {
-                    $this->keyBuilder->build($v);
+                    $this->buildKey($v);
                 });
 
                 $notFound = (array)$this->cache->getMultiple(array_values($missedKey), null);
                 array_walk($notFound, function (&$value) {
-                    $value = $this->serializer->deserialize($this->compressor->uncompress($value));
+                    $value = $this->decode($value);
                 });
 
                 return array_merge($cached, $notFound);
@@ -161,8 +152,8 @@ class Client implements ClientInterface {
     {
         $encodedValues = $values;
         array_walk($encodedValues, function (&$v, &$k) {
-            $k = $this->keyBuilder->build($k);
-            $v = $this->compressor->compress($this->serializer->serialize($v));
+            $k = $this->buildKey($k);
+            $v = $this->encode($v);
         });
 
         try {
@@ -184,7 +175,7 @@ class Client implements ClientInterface {
     public function mDelete(array $keys): bool
     {
         $keys = array_map(function ($v) {
-            return $this->keyBuilder->build($v);
+            return $this->buildKey($v);
         }, $keys);
 
         try {
@@ -213,8 +204,42 @@ class Client implements ClientInterface {
     /**
      * @inheritdoc
      */
-    public function getKeyBuilder(): KeyBuilderInterface
-    {
-        return $this->keyBuilder;
+    public function buildKey($key,...$args): string
+	{
+		if ($this->keyBuilder !== null){
+			return $this->keyBuilder->build($key, ...$args);
+		}
+
+		return $key;
     }
+
+	/**
+	 * @param mixed $value
+	 * @return string
+	 */
+    protected function encode($value): string
+	{
+		$value = $this->serializer->serialize($value);
+
+		if ($this->compressor !== null) {
+			return $this->compressor->compress($value);
+		}
+
+		return $value;
+	}
+
+	/**
+	 * @param string|null $value
+	 * @return mixed
+	 */
+	protected function decode(?string $value)
+	{
+		$value = $this->serializer->deserialize($value);
+
+		if ($this->compressor !== null) {
+			return $this->compressor->uncompress($value);
+		}
+
+		return $value;
+	}
 }

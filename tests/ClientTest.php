@@ -72,9 +72,9 @@ final class ClientTest extends TestCase
 
 		$client = new \Epignosis\Client(
 			new \Epignosis\Adapters\Redis($service),
-			new \Epignosis\Serializers\Igbinary(),
-			$keyBuilder,
-			new \Epignosis\Compressors\Zlib(6)
+			new \Epignosis\Serializers\Native(),
+			null,
+			null
 		);
 
 		return $client;
@@ -86,8 +86,7 @@ final class ClientTest extends TestCase
 	 */
 	public function testSet($value, $key, $client)
 	{
-		$set = $client->set($key, $value);
-		$this->assertSame(true, $set, 'SET operation failure');
+		$this->assertSame(true, $client->set($key, $value), 'SET operation failure');
 	}
 
 	/**
@@ -97,8 +96,7 @@ final class ClientTest extends TestCase
 	 */
 	public function testGet($value, $key, $client)
 	{
-		$get = $client->get($key);
-		$this->assertEquals($value, $get, 'GET operation failure');
+		$this->assertEquals($value, $client->get($key), 'GET operation failure');
 	}
 
 	/**
@@ -108,8 +106,7 @@ final class ClientTest extends TestCase
 	 */
 	public function testHas($value, $key, $client)
 	{
-		$has = $client->has($key);
-		$this->assertSame(true, $has, 'HAS operation failure');
+		$this->assertSame(true, $client->has($key), 'HAS operation failure');
 	}
 
 	/**
@@ -118,8 +115,7 @@ final class ClientTest extends TestCase
 	 */
 	public function testDelete($value, $key, $client)
 	{
-		$delete = $client->delete($key);
-		$this->assertSame(true, $delete, 'DELETE operation failure');
+		$this->assertSame(true, $client->delete($key), 'DELETE operation failure');
 	}
 
 	/**
@@ -129,8 +125,7 @@ final class ClientTest extends TestCase
 	 */
 	public function testHasNot($value, $key, $client)
 	{
-		$has = $client->has($key);
-		$this->assertSame(false, $has, 'HAS not operation failure');
+		$this->assertSame(false, $client->has($key), 'HAS not operation failure');
 	}
 
 	/**
@@ -140,8 +135,7 @@ final class ClientTest extends TestCase
 	public function testSetMultiple($values, $keys, $client)
 	{
         $pair = array_fill_keys($keys,$values);
-		$mSet = $client->mSet($pair);
-		$this->assertSame(true, $mSet, 'mSet operation failure');
+		$this->assertSame(true, $client->mSet($pair), 'mSet operation failure');
 	}
 
 	/**
@@ -152,8 +146,7 @@ final class ClientTest extends TestCase
 	public function testGetMultiple($values, $keys, $client)
 	{
         $pair = array_fill_keys($keys,$values);
-		$mGet = $client->mGet($keys);
-		$this->assertEquals($mGet, $pair, 'mGet operation failure');
+		$this->assertEquals($pair, $client->mGet($keys), 'mGet operation failure');
 	}
 
 	/**
@@ -163,7 +156,6 @@ final class ClientTest extends TestCase
 	 */
 	public function testDeleteMultiple($values, $keys, $client)
 	{
-		$mDelete = $client->mDelete($keys);
-		$this->assertSame(true, $mDelete, 'mDelete operation failure');
+		$this->assertSame(true, $client->mDelete($keys), 'mDelete operation failure');
 	}
 }
