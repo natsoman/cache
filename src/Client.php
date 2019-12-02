@@ -69,7 +69,7 @@ class Client implements ClientInterface {
         }
 
         try {
-            $value = $this->decode($this->cache->get($value));
+            $value = $this->decode($this->cache->get($cacheKey));
         } catch (InvalidArgumentException $e) {}
 
         if ($value === null && is_string($callback)) {

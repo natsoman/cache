@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Epignosis\Tests;
 
+use Epignosis\Client;
 use Epignosis\KeyBuilder;
+use Epignosis\Serializers\Native;
+use Epignosis\Compressors\Zlib;
+use Epignosis\Adapters\Redis;
 use PHPUnit\Framework\TestCase;
 
 final class ClientTest extends TestCase
@@ -40,44 +44,34 @@ final class ClientTest extends TestCase
 
 	public function testConnection()
 	{
-		$service = new \RedisCluster(
-			null,
-			[
-				'redis-cluster:7000',
-				'redis-cluster:7001',
-				'redis-cluster:7002',
-				'redis-cluster:7003',
-				'redis-cluster:7004',
-				'redis-cluster:7005'
-			]
-		);
+		$cache = $this->createMock(Redis::class);
+		$cache->expects($this->any())->method('get')->will($this->returnArgument(1));
+		$cache->expects($this->any())->method('set')->willReturn(true);
 
-        $masters = $service->_masters();
+		try {
 
-        $pings = 0;
-        foreach ($masters as $master) {
-            $pings += (int)$service->ping($master);
-        }
+			$keyBuilder = new KeyBuilder(
+				[
+					'masterDomain' => function ($id = 0) { return sprintf('Domain:%s',$id); },
+					'domainConfiguration' => function ($id = 0) { return sprintf('Domain:%s:Config',$id); },
+					'session' => function ($ws = 0, $id = 0) { return sprintf('Session:%s-%s', $ws, $id); }
+				]
+			);
 
-        // all master are alive
-        $this->assertSame($pings,count($masters));
+			$client = new Client(
+				$cache,
+				new Native(),
+				$keyBuilder,
+				new Zlib()
+			);
 
-		$keyBuilder = new KeyBuilder(
-			[
-				'masterDomain' => function ($id = 0) { return sprintf('Domain:%s',$id); },
-				'domainConfiguration' => function ($id = 0) { return sprintf('Domain:%s:Config',$id); },
-				'session' => function ($ws = 0, $id = 0) { return sprintf('Session:%s-%s', $ws, $id); }
-			]
-		);
+			$this->assertEquals(Client::class, get_class($client));
 
-		$client = new \Epignosis\Client(
-			new \Epignosis\Adapters\Redis($service),
-			new \Epignosis\Serializers\Native(),
-			null,
-			null
-		);
+			return $client;
 
-		return $client;
+		} catch(\Throwable $t) {
+			return null;
+		}
 	}
 
 	/**
