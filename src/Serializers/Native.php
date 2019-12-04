@@ -4,8 +4,9 @@ namespace Epignosis\Serializers;
 
 use Epignosis\Interfaces\SerializerInterface;
 
-class Native implements SerializerInterface {
-    
+class Native implements SerializerInterface
+{
+
     /**
      * @inheritdoc
      */
@@ -17,12 +18,8 @@ class Native implements SerializerInterface {
     /**
      * @inheritdoc
      */
-    public function deserialize(?string $value)
+    public function deserialize(string $value)
     {
-        if ($value !== null) {
-            return unserialize($value);
-        }
-
-        return $value;
+        return unserialize($value);
     }
 }

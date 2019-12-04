@@ -14,7 +14,8 @@ use Epignosis\Interfaces\{
     CompressorInterface
 };
 
-class Client implements ClientInterface {
+class Client implements ClientInterface
+{
 
     use MemoizationTrait;
 
@@ -59,7 +60,7 @@ class Client implements ClientInterface {
     /**
      * @inheritdoc
      */
-    public function get(string $key,callable $callback = null)
+    public function get(string $key, callable $callback = null)
     {
         $cacheKey = $this->buildKey($key);
         $value = $this->getFromMemory($cacheKey);
@@ -69,8 +70,12 @@ class Client implements ClientInterface {
         }
 
         try {
-            $value = $this->decode($this->cache->get($cacheKey));
-        } catch (InvalidArgumentException $e) {}
+            $cacheValue = $this->cache->get($cacheKey);
+            if (is_string($cacheValue)) {
+                $value = $this->decode($cacheValue);
+            }
+        } catch (InvalidArgumentException $e) {
+        }
 
         if ($value === null && is_string($callback)) {
             if (($value = $callback()) !== null) {
@@ -92,14 +97,15 @@ class Client implements ClientInterface {
     public function set(string $key, $value, int $ttl = 3600): bool
     {
         $status = false;
-
         try {
-            $status = $this->cache->set($cacheKey = $this->buildKey($key), $this->encode($value), $ttl);
+            $cacheKey = $this->buildKey($key);
+            $value = $this->encode($value);
+            $status = $this->cache->set($cacheKey, $value, $ttl);
             if ($status === true) {
                 $this->addToMemory($cacheKey, $value);
             }
-
-        } catch (InvalidArgumentException $e) {}
+        } catch (InvalidArgumentException $e) {
+        }
 
         return $status;
     }
@@ -113,7 +119,8 @@ class Client implements ClientInterface {
 
         try {
             $status = $this->cache->delete($this->buildKey($key));
-        } catch (InvalidArgumentException $e) {}
+        } catch (InvalidArgumentException $e) {
+        }
 
         return $status;
     }
@@ -133,7 +140,9 @@ class Client implements ClientInterface {
 
                 $notFound = (array)$this->cache->getMultiple(array_values($missedKey), null);
                 array_walk($notFound, function (&$value) {
-                    $value = $this->decode($value);
+                    if (is_string($value)) {
+                        $value = $this->decode($value);
+                    }
                 });
 
                 return array_merge($cached, $notFound);
@@ -193,53 +202,53 @@ class Client implements ClientInterface {
         return $status;
     }
 
-	/**
-	 * @inheritdoc
-	 */
+    /**
+     * @inheritdoc
+     */
     public function has(string $key): bool
-	{
-    	return $this->cache->has($key);
-	}
+    {
+        return $this->cache->has($key);
+    }
 
     /**
      * @inheritdoc
      */
-    public function buildKey($key,...$args): string
-	{
-		if ($this->keyBuilder !== null){
-			return $this->keyBuilder->build($key, ...$args);
-		}
+    public function buildKey($key, ...$args): string
+    {
+        if ($this->keyBuilder !== null) {
+            return $this->keyBuilder->build($key, ...$args);
+        }
 
-		return $key;
+        return $key;
     }
 
-	/**
-	 * @param mixed $value
-	 * @return string
-	 */
+    /**
+     * @param mixed $value
+     * @return string
+     */
     protected function encode($value): string
-	{
-		$value = $this->serializer->serialize($value);
+    {
+        $value = $this->serializer->serialize($value);
 
-		if ($this->compressor !== null) {
-			return $this->compressor->compress($value);
-		}
+        if ($this->compressor !== null) {
+            return $this->compressor->compress($value);
+        }
 
-		return $value;
-	}
+        return $value;
+    }
 
-	/**
-	 * @param string|null $value
-	 * @return mixed
-	 */
-	protected function decode(?string $value)
-	{
-		$value = $this->serializer->deserialize($value);
+    /**
+     * @param string|null $value
+     * @return mixed
+     */
+    protected function decode(string $value)
+    {
+        if ($this->compressor !== null) {
+            $value = $this->compressor->uncompress($value);
+        }
 
-		if ($this->compressor !== null) {
-			return $this->compressor->uncompress($value);
-		}
+        $value = $this->serializer->deserialize($value);
 
-		return $value;
-	}
+        return $value;
+    }
 }

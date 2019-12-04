@@ -53,33 +53,7 @@ final class ClientTest extends TestCase
         $this->serializerMock = $this->createMock(SerializerInterface::class);
         $this->compressorMock = $this->createMock(CompressorInterface::class);
 
-        $this->serializerMock->expects($this->any())
-            ->method('serialize')
-            ->will($this->returnCallback(function ($v) {
-                return serialize($v);
-            }));
-
-        $this->serializerMock->expects($this->any())
-            ->method('deserialize')
-            ->will($this->returnCallback(function ($v) {
-                return unserialize($v);
-            }));
-
-        $this->compressorMock->expects($this->any())
-            ->method('compress')
-            ->will($this->returnCallback(function ($v) {
-                return gzcompress($v);
-            }));
-
-        $this->compressorMock->expects($this->any())
-            ->method('uncompress')
-            ->will($this->returnCallback(function ($v) {
-                return gzuncompress($v);
-            }));
-
-        $this->keyBuilderMock->expects($this->any())
-            ->method('build')
-            ->will($this->returnArgument(0));
+        $this->keyBuilderMock->expects($this->any())->method('build')->will($this->returnArgument(0));
 
         $this->client = new Client(
             $this->cacheMock,
@@ -94,14 +68,19 @@ final class ClientTest extends TestCase
     public function provider()
     {
         return [
-            'string' => ['testValue', 'testValueKey'],
-            'null' => [null, 'testNullKey'],
-            'false' => [false, 'testFalseKey'],
-            'true' => [true, 'testTrueKey'],
-            'object' => [new stdClass(), 'testObjectKey'],
-            'int' => [1, 'testIntKey'],
-            'float' => [0.1, 'testFloatKey'],
-            'nestedArray' => [['a' => 3, 'b' => 2, ['aa' => 22]], 'testNestedArrayKey'],
+            'string' => ['value', 'stringKey', 's:5:"value";', 'x�+�2�R*K�)MU�\0008�'],
+            'emptyString' => ['', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
+            'null' => [null, 'nullKey', 'N;', 'x��\000\000�\000�'],
+            'false' => [false, 'falseKey', 'b:0;', 'x�K�2�\000'],
+            'object' => [new stdClass(), 'objectKey', 'O:8:"stdClass":0:{}', 'x�󷲰R*.Iq�I,.V�2���\000:F'],
+            'int' => [1, 'intKey', 'i:1;', 'x�˴2�\000�'],
+            'double' => [0.11, 'doubleKey', 'd:0.11;', 'x�K�2�34�\000��'],
+            'nestedArray' => [
+                ['a' => 3, 'b' => 2, ['aa' => 22]],
+                'nestedArrayKey',
+                'a:3:{s:1:"a";i:3;s:1:"b";i:2;i:0;a:1:{s:2:"aa";i:22;}}',
+                'x�K�2��.�2�RJT�δ2���@l# 6�N����*���kk�8�'
+            ],
         ];
     }
 
@@ -138,7 +117,13 @@ final class ClientTest extends TestCase
             ],
             'mixed' => [
                 [null, 'testValue', false, true, new stdClass()],
-                ['testMixedNestedKey0', 'testMixedNestedKey1', 'testMixedNestedKey2', 'testMixedNestedKey3', 'testMixedNestedKey4']
+                [
+                    'testMixedNestedKey0',
+                    'testMixedNestedKey1',
+                    'testMixedNestedKey2',
+                    'testMixedNestedKey3',
+                    'testMixedNestedKey4'
+                ]
             ]
         ];
     }
@@ -146,19 +131,26 @@ final class ClientTest extends TestCase
     /**
      * @dataProvider provider
      */
-    public function testSet($value, $key)
+    public function testSet($value, $key, $serializedValue, $compressedValue)
     {
+        $this->serializerMock->expects($this->once())->method('serialize')->willReturn($serializedValue);
+        $this->compressorMock->expects($this->once())->method('compress')->willReturn($compressedValue);
         $this->cacheMock->expects($this->once())->method('set')->willReturn(true);
+
         $this->assertSame(true, $this->client->set($key, $value));
     }
 
     /**
      * @dataProvider provider
      */
-    public function testGet($value, $key)
+    public function testGet($value, $key, $serializedValue, $compressedValue)
     {
-        $this->cacheMock->expects($this->once())->method('get')->willReturn($value);
-        $this->assertEquals($value, $this->client->get($key));
+        $this->serializerMock->expects($this->once())->method('deserialize')->willReturn($value);
+        $this->compressorMock->expects($this->once())->method('uncompress')->willReturn($serializedValue);
+        $this->cacheMock->expects($this->once())->method('get')->willReturn($compressedValue);
+
+        $actualValue = $this->client->get($key);
+        $this->assertEquals($value, $actualValue);
     }
 //
 //	/**
@@ -168,7 +160,7 @@ final class ClientTest extends TestCase
 //	 */
 //	public function testHas($value, $key, $client)
 //	{
-//		$this->assertSame(true, $client->has($key), 'HAS operation failure');
+//		$this->assertSame(true, $client->has($key));
 //	}
 //
 //	/**

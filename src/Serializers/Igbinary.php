@@ -4,8 +4,9 @@ namespace Epignosis\Serializers;
 
 use Epignosis\Interfaces\SerializerInterface;
 
-class Igbinary implements SerializerInterface {
-    
+class Igbinary implements SerializerInterface
+{
+
     /**
      * @inheritdoc
      */
@@ -17,12 +18,8 @@ class Igbinary implements SerializerInterface {
     /**
      * @inheritdoc
      */
-    public function deserialize(?string $value)
+    public function deserialize(string $value)
     {
-        if ($value !== null) {
-            return igbinary_unserialize($value);
-        }
-
-        return $value;
+        return igbinary_unserialize($value);
     }
 }

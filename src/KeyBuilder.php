@@ -5,10 +5,11 @@ namespace Epignosis;
 use Epignosis\Exceptions\InvalidKeyException;
 use Epignosis\Interfaces\KeyBuilderInterface;
 
-class KeyBuilder implements KeyBuilderInterface {
+class KeyBuilder implements KeyBuilderInterface
+{
 
     /**
-     * @var array 
+     * @var array
      */
     protected $map;
 
@@ -33,11 +34,11 @@ class KeyBuilder implements KeyBuilderInterface {
         if (is_string($cacheKey)) {
             return $cacheKey;
         }
-        
+
         if (is_callable($cacheKey)) {
             return $cacheKey(...$args);
         }
-        
+
         throw new InvalidKeyException('Key cannot be mapped to a cache key.');
     }
 

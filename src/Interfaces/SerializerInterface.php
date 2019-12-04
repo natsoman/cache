@@ -2,13 +2,14 @@
 
 namespace Epignosis\Interfaces;
 
-interface SerializerInterface {
+interface SerializerInterface
+{
 
     /**
      * @param $value
      * @return string
      */
-    public function serialize($value):string;
+    public function serialize($value): string;
 
     /**
      * @param string $value

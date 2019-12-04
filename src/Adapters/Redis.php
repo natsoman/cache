@@ -8,7 +8,8 @@ use Predis\Client as Predis;
 use Psr\SimpleCache\CacheInterface;
 use Epignosis\Exceptions\CacheException;
 
-class Redis implements CacheInterface {
+class Redis implements CacheInterface
+{
 
     /**
      * @var PhpRedis|Predis|RedisCluster
@@ -16,8 +17,8 @@ class Redis implements CacheInterface {
     protected $service;
 
     /**
-     * @var PhpRedis|Predis|RedisCluster $service
      * @throws CacheException
+     * @var PhpRedis|Predis|RedisCluster $service
      */
     public function __construct($service)
     {
@@ -31,7 +32,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function get($key, $default = null):? string
+    public function get($key, $default = null): ?string
     {
         return ($value = $this->service->get($key)) !== false ? $value : $default;
     }
@@ -71,7 +72,7 @@ class Redis implements CacheInterface {
     /**
      * @inheritdoc
      */
-    public function setMultiple($values,$ttl = null): bool
+    public function setMultiple($values, $ttl = null): bool
     {
         return $this->service->mset((array)$values);
     }
