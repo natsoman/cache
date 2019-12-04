@@ -77,7 +77,7 @@ class Client implements ClientInterface
         } catch (InvalidArgumentException $e) {
         }
 
-        if ($value === null && is_string($callback)) {
+        if ($value === null && is_callable($callback)) {
             if (($value = $callback()) !== null) {
                 $this->set($key, $value);
             }
