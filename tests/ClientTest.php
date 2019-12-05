@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Epignosis\Tests;
 
-use Epignosis\Client;
+use Epignosis\CacheDecorator;
 use Epignosis\Interfaces\ClientInterface;
 use Epignosis\Interfaces\CompressorInterface;
 use Epignosis\Interfaces\KeyBuilderInterface;
@@ -55,7 +55,7 @@ final class ClientTest extends TestCase
 
         $this->keyBuilderMock->expects($this->any())->method('build')->will($this->returnArgument(0));
 
-        $this->client = new Client(
+        $this->client = new CacheDecorator(
             $this->cacheMock,
             $this->serializerMock,
             $this->keyBuilderMock,

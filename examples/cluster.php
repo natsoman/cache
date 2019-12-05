@@ -2,7 +2,7 @@
 
 require 'vendor/autoload.php';
 
-$client = new \Epignosis\Client(['host' => [
+$client = new \Epignosis\CacheDecorator(['host' => [
         'redis-cluster:7000',
         'redis-cluster:7001',
         'redis-cluster:7002',

@@ -10,13 +10,15 @@ use Psr\SimpleCache\{
 use Epignosis\Interfaces\{
     KeyBuilderInterface,
     SerializerInterface,
-    ClientInterface,
     CompressorInterface
 };
 
-class Client implements ClientInterface
+class CacheDecorator implements CacheInterface
 {
 
+    /**
+     * @var MemoizationTrait
+     */
     use MemoizationTrait;
 
     /**
@@ -48,8 +50,8 @@ class Client implements ClientInterface
     public function __construct(
         CacheInterface $cache,
         SerializerInterface $serializer,
-        KeyBuilderInterface $keyBuilder = null,
-        CompressorInterface $compressor = null
+        ?KeyBuilderInterface $keyBuilder,
+        ?CompressorInterface $compressor
     ) {
         $this->cache = $cache;
         $this->serializer = $serializer;
@@ -60,7 +62,7 @@ class Client implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function get(string $key, callable $callback = null)
+    public function get($key, $default = null)
     {
         $cacheKey = $this->buildKey($key);
         $value = $this->getFromMemory($cacheKey);
@@ -71,21 +73,18 @@ class Client implements ClientInterface
 
         try {
             $cacheValue = $this->cache->get($cacheKey);
-            if (is_string($cacheValue)) {
+            if ($cacheValue !== null) {
                 $value = $this->decode($cacheValue);
             }
         } catch (InvalidArgumentException $e) {
         }
 
-        if ($value === null && is_callable($callback)) {
-            if (($value = $callback()) !== null) {
+        if ($value === null && is_callable($default)) {
+            if (($value = $default()) !== null) {
                 $this->set($key, $value);
             }
-        }
-
-        if ($value !== null) {
-            $this->addToMemory($cacheKey, $value);
-            return $value;
+        } elseif ($value === null) {
+            $this->set($key, $default);
         }
 
         return $this->getFromMemory($cacheKey);
@@ -94,7 +93,7 @@ class Client implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function set(string $key, $value, int $ttl = 3600): bool
+    public function set($key, $value, $ttl = null)
     {
         $status = false;
         try {
@@ -113,7 +112,7 @@ class Client implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function delete(string $key): bool
+    public function delete($key)
     {
         $status = false;
 
@@ -126,9 +125,17 @@ class Client implements ClientInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function clear()
+    {
+        $this->cache->clear();
+    }
+
+    /**
      * @inheritdoc
      */
-    public function mGet(array $keys)
+    public function getMultiple($keys, $callback = null)
     {
         list($cached, $missedKey) = $this->searchKeys($keys);
 
@@ -157,7 +164,7 @@ class Client implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function mSet(array $values, $ttl = -1): bool
+    public function setMultiple($values, $ttl = null)
     {
         $encodedValues = $values;
         array_walk($encodedValues, function (&$v, &$k) {
@@ -181,11 +188,11 @@ class Client implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function mDelete(array $keys): bool
+    public function deleteMultiple($keys): bool
     {
         $keys = array_map(function ($v) {
             return $this->buildKey($v);
-        }, $keys);
+        }, (array)$keys);
 
         try {
             $status = $this->cache->deleteMultiple($keys);
@@ -205,7 +212,7 @@ class Client implements ClientInterface
     /**
      * @inheritdoc
      */
-    public function has(string $key): bool
+    public function has($key): bool
     {
         return $this->cache->has($key);
     }
