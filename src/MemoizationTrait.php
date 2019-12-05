@@ -1,6 +1,6 @@
 <?php
 
-namespace Epignosis;
+namespace Natso;
 
 trait MemoizationTrait {
 

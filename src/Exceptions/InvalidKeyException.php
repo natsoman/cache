@@ -1,6 +1,6 @@
 <?php
 
-namespace Epignosis\Exceptions;
+namespace Natso\Exceptions;
 
 use Throwable;
 use Exception;

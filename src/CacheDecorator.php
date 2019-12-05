@@ -1,13 +1,13 @@
 <?php
 
-namespace Epignosis;
+namespace Natso;
 
-use Epignosis\Exceptions\InvalidKeyException;
+use Natso\Exceptions\InvalidKeyException;
 use Psr\SimpleCache\{
     CacheInterface,
     InvalidArgumentException
 };
-use Epignosis\Interfaces\{
+use Natso\Interfaces\{
     KeyBuilderInterface,
     SerializerInterface,
     CompressorInterface

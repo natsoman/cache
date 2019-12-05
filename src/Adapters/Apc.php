@@ -1,8 +1,8 @@
 <?php
 
-namespace Epignosis\Adapters;
+namespace Natso\Adapters;
 
-use Epignosis\Exceptions\CacheException;
+use Natso\Exceptions\CacheException;
 use Psr\SimpleCache\CacheInterface;
 
 class Apc implements CacheInterface {

@@ -1,12 +1,12 @@
 <?php
 
-namespace Epignosis\Adapters;
+namespace Natso\Adapters;
 
 use RedisCluster;
 use Redis as PhpRedis;
 use Predis\Client as Predis;
 use Psr\SimpleCache\CacheInterface;
-use Epignosis\Exceptions\CacheException;
+use Natso\Exceptions\CacheException;
 
 class Redis implements CacheInterface
 {

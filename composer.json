@@ -1,23 +1,23 @@
 {
-    "name": "epignosis/cache",
-    "description": "Epignosis cache client",
+    "name": "natsopoulos/cache",
+    "description": "Cache client wrapper builded on top of PSR-16",
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "TalentLMS Team",
-            "email": "talentlms@talentlms.com"
+            "name": "Kostas Natsopoulos",
+            "email": "natsoman7@gmail.com"
         }
     ],
     "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
-            "Epignosis\\": "src/"
+            "Natso\\": "src/"
         },
         "classmap": ["src/"]
     },
     "autoload-dev": {
-        "psr-4": { "Epignosis\\Tests\\": "tests/" }
+        "psr-4": { "Natso\\Tests\\": "tests/" }
     },
     "require": {
         "php" : "^7.1",

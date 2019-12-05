@@ -1,8 +1,8 @@
 <?php
 
-namespace Epignosis\Compressors;
+namespace Natso\Compressors;
 
-use Epignosis\Interfaces\CompressorInterface;
+use Natso\Interfaces\CompressorInterface;
 
 class Zlib implements CompressorInterface {
 

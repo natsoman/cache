@@ -1,8 +1,8 @@
 <?php
 
-namespace  Epignosis\Interfaces;
+namespace  Natso\Interfaces;
 
-use Epignosis\Exceptions\InvalidKeyException;
+use Natso\Exceptions\InvalidKeyException;
 
 interface KeyBuilderInterface {
 

@@ -1,14 +1,11 @@
 <?php
 
-declare(strict_types=1);
+namespace Natso\Tests;
 
-namespace Epignosis\Tests;
-
-use Epignosis\CacheDecorator;
-use Epignosis\Interfaces\ClientInterface;
-use Epignosis\Interfaces\CompressorInterface;
-use Epignosis\Interfaces\KeyBuilderInterface;
-use Epignosis\Interfaces\SerializerInterface;
+use Natso\CacheDecorator;
+use Natso\Interfaces\CompressorInterface;
+use Natso\Interfaces\KeyBuilderInterface;
+use Natso\Interfaces\SerializerInterface;
 use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -36,7 +33,7 @@ final class ClientTest extends TestCase
     protected $compressorMock;
 
     /**
-     * @var ClientInterface
+     * @var CacheInterface
      */
     protected $client;
 

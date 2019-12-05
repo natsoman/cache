@@ -1,6 +1,6 @@
 <?php
 
-namespace  Epignosis\Interfaces;
+namespace  Natso\Interfaces;
 
 interface CompressorInterface {
 

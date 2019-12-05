@@ -1,9 +1,9 @@
 <?php
 
-namespace Epignosis;
+namespace Natso;
 
-use Epignosis\Exceptions\InvalidKeyException;
-use Epignosis\Interfaces\KeyBuilderInterface;
+use Natso\Exceptions\InvalidKeyException;
+use Natso\Interfaces\KeyBuilderInterface;
 
 class KeyBuilder implements KeyBuilderInterface
 {
@@ -34,6 +34,11 @@ class KeyBuilder implements KeyBuilderInterface
         if (is_string($cacheKey)) {
             return $cacheKey;
         }
+
+        if (is_array($cacheKey)) {
+            return sprintf($cacheKey[0], ...$args ?? $cacheKey[1]);
+        }
+
 
         if (is_callable($cacheKey)) {
             return $cacheKey(...$args);

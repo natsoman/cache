@@ -1,8 +1,8 @@
 <?php
 
-namespace Epignosis\Serializers;
+namespace Natso\Serializers;
 
-use Epignosis\Interfaces\SerializerInterface;
+use Natso\Interfaces\SerializerInterface;
 
 class Native implements SerializerInterface
 {
