@@ -6,7 +6,7 @@ interface SerializerInterface
 {
 
     /**
-     * @param $value
+     * @param mixed $value
      * @return string
      */
     public function serialize($value): string;

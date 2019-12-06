@@ -1,10 +1,11 @@
 <?php
 
-namespace  Natso\Interfaces;
+namespace Natso\Interfaces;
 
 use Natso\Exceptions\InvalidKeyException;
 
-interface KeyBuilderInterface {
+interface KeyBuilderInterface
+{
 
     /**
      * @param array $map

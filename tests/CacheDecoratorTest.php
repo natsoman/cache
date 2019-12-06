@@ -10,7 +10,7 @@ use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-final class ClientTest extends TestCase
+final class CacheDecoratorTest extends TestCase
 {
     /**
      * @var CacheInterface
@@ -85,43 +85,50 @@ final class ClientTest extends TestCase
     {
         return [
             'string' => [
-                ['testValue0', 'testValue1', 'testValue2'],
-                ['testValueKey0', 'testValueKey1', 'testValueKey2']
-            ],
-            'empty' => [
-                [null, ''],
-                ['testMultiNullKey0', 'testMultiNullKey1']
-            ],
-            'bool' => [
-                [false, false],
-                ['testMultiFalseKey0', 'testMultiFalseKey2']
-            ],
-            'object' => [
-                [new stdClass(), new stdClass()],
-                ['testMultiObjectKey0', 'testMultiObjectKey1']
-            ],
-            'int' => [
-                [0, 1, 2],
-                ['testMultiIntKey0', 'testMultiIntKey1', 'testMultiIntKey2']
-            ],
-            'float' => [
-                [0.0, 0.1, 0.3],
-                ['testMultiFloatKey0', 'testMultiFloatKey1', 'testMultiFloatKey2']
-            ],
-            'nestedArray' => [
-                [array('a' => 1, array('aa' => 11)), array('b' => 2, array('bb' => 22))],
-                ['testMultiNestedArrayKey10', 'testMultiNestedArrayKey1']
-            ],
-            'mixed' => [
-                [null, 'testValue', false, true, new stdClass()],
-                [
-                    'testMixedNestedKey0',
-                    'testMixedNestedKey1',
-                    'testMixedNestedKey2',
-                    'testMixedNestedKey3',
-                    'testMixedNestedKey4'
+                ['stringKey0' => 'value0', 'stringKey1' => 'value1', 'stringKey2' => 'value2'], // pair
+                [ // serialization map
+                    ['value0', 'value1', 'value2'],
+                    ['s:6:"value0";', 's:6:"value1";', 's:6:"value2";']
+                ],
+                [ // compression map
+                    ['s:6:"value0";', 's:6:"value1";', 's:6:"value2";'],
+                    ['x�+�2�R*K�)M5P�\000/�', 'x�+�2�R*K�)M5T�\0002�', 'x�+�2�R*K�)M5R�\0005�']
                 ]
-            ]
+            ],
+//            'empty' => [
+//                [null, ''],
+//                ['testMultiNullKey0', 'testMultiNullKey1']
+//            ],
+//            'bool' => [
+//                [false, false],
+//                ['testMultiFalseKey0', 'testMultiFalseKey2']
+//            ],
+//            'object' => [
+//                [new stdClass(), new stdClass()],
+//                ['testMultiObjectKey0', 'testMultiObjectKey1']
+//            ],
+//            'int' => [
+//                [0, 1, 2],
+//                ['testMultiIntKey0', 'testMultiIntKey1', 'testMultiIntKey2']
+//            ],
+//            'float' => [
+//                [0.0, 0.1, 0.3],
+//                ['testMultiFloatKey0', 'testMultiFloatKey1', 'testMultiFloatKey2']
+//            ],
+//            'nestedArray' => [
+//                [array('a' => 1, array('aa' => 11)), array('b' => 2, array('bb' => 22))],
+//                ['testMultiNestedArrayKey10', 'testMultiNestedArrayKey1']
+//            ],
+//            'mixed' => [
+//                [null, 'testValue', false, true, new stdClass()],
+//                [
+//                    'testMixedNestedKey0',
+//                    'testMixedNestedKey1',
+//                    'testMixedNestedKey2',
+//                    'testMixedNestedKey3',
+//                    'testMixedNestedKey4'
+//                ]
+//            ]
         ];
     }
 
@@ -133,7 +140,6 @@ final class ClientTest extends TestCase
         $this->serializerMock->expects($this->once())->method('serialize')->willReturn($serializedValue);
         $this->compressorMock->expects($this->once())->method('compress')->willReturn($compressedValue);
         $this->cacheMock->expects($this->once())->method('set')->willReturn(true);
-
         $this->assertSame(true, $this->client->set($key, $value));
     }
 
@@ -145,49 +151,38 @@ final class ClientTest extends TestCase
         $this->serializerMock->expects($this->once())->method('deserialize')->willReturn($value);
         $this->compressorMock->expects($this->once())->method('uncompress')->willReturn($serializedValue);
         $this->cacheMock->expects($this->once())->method('get')->willReturn($compressedValue);
-
         $actualValue = $this->client->get($key);
         $this->assertEquals($value, $actualValue);
     }
-//
-//	/**
-//     * @dataProvider provider
-//	 * @depends testConnection
-//	 * @depends testSet
-//	 */
-//	public function testHas($value, $key, $client)
-//	{
-//		$this->assertSame(true, $client->has($key));
-//	}
-//
-//	/**
-//     * @dataProvider provider
-//	 * @depends testConnection
-//	 */
-//	public function testDelete($value, $key, $client)
-//	{
-//		$this->assertSame(true, $client->delete($key), 'DELETE operation failure');
-//	}
-//
-//	/**
-//     * @dataProvider provider
-//	 * @depends testConnection
-//	 * @depends testDelete
-//	 */
-//	public function testHasNot($value, $key, $client)
-//	{
-//		$this->assertSame(false, $client->has($key), 'HAS not operation failure');
-//	}
-//
-//	/**
-//     * @dataProvider multiProvider
-//	 * @depends testConnection
-//	 */
-//	public function testSetMultiple($values, $keys, $client)
-//	{
-//        $pair = array_fill_keys($keys,$values);
-//		$this->assertSame(true, $client->mSet($pair), 'mSet operation failure');
-//	}
+
+	/**
+     * @dataProvider provider
+	 */
+	public function testHas($value, $key, $serializedValue, $compressedValue)
+	{
+        $this->cacheMock->expects($this->once())->method('has')->willReturn(true);
+		$this->assertSame(true, $this->client->has($key));
+	}
+
+
+    /**
+     * @dataProvider provider
+     */
+    public function testDelete($value, $key, $serializedValue, $compressedValue)
+    {
+        $this->cacheMock->expects($this->once())->method('delete')->willReturn(true);
+        $this->assertSame(true, $this->client->delete($key));
+    }
+
+    /**
+     * @dataProvider multiProvider
+     */
+	public function testSetMultiple($pair, $serializationMap, $compressionMap)
+    {
+        $this->serializerMock->expects($this->any())->method('serialize')->will($this->returnValueMap($serializationMap));
+        $this->compressorMock->expects($this->any())->method('compress')->will($this->returnValueMap($compressionMap));
+        $this->assertSame(true, $this->client->setMultiple($pair));
+    }
 //
 //	/**
 //     * @dataProvider multiProvider

@@ -2,7 +2,6 @@
 
 namespace Natso;
 
-use Natso\Exceptions\InvalidKeyException;
 use Psr\SimpleCache\{
     CacheInterface,
     InvalidArgumentException
@@ -15,7 +14,6 @@ use Natso\Interfaces\{
 
 class CacheDecorator implements CacheInterface
 {
-
     /**
      * @var MemoizationTrait
      */
@@ -77,14 +75,15 @@ class CacheDecorator implements CacheInterface
                 $value = $this->decode($cacheValue);
             }
         } catch (InvalidArgumentException $e) {
+            return null;
         }
 
         if ($value === null && is_callable($default)) {
             if (($value = $default()) !== null) {
                 $this->set($key, $value);
             }
-        } elseif ($value === null) {
-            $this->set($key, $default);
+        } else {
+            $this->addToMemory($cacheKey, $value);
         }
 
         return $this->getFromMemory($cacheKey);
@@ -95,7 +94,6 @@ class CacheDecorator implements CacheInterface
      */
     public function set($key, $value, $ttl = null)
     {
-        $status = false;
         try {
             $cacheKey = $this->buildKey($key);
             $value = $this->encode($value);
@@ -104,6 +102,7 @@ class CacheDecorator implements CacheInterface
                 $this->addToMemory($cacheKey, $value);
             }
         } catch (InvalidArgumentException $e) {
+            return false;
         }
 
         return $status;
@@ -114,11 +113,10 @@ class CacheDecorator implements CacheInterface
      */
     public function delete($key)
     {
-        $status = false;
-
         try {
             $status = $this->cache->delete($this->buildKey($key));
         } catch (InvalidArgumentException $e) {
+            return false;
         }
 
         return $status;
@@ -135,9 +133,9 @@ class CacheDecorator implements CacheInterface
     /**
      * @inheritdoc
      */
-    public function getMultiple($keys, $callback = null)
+    public function getMultiple($keys, $default = null)
     {
-        list($cached, $missedKey) = $this->searchKeys($keys);
+        list($cached, $missedKey) = $this->searchKeys((array)$keys);
 
         try {
             if (count($missedKey) > 0) {
@@ -146,16 +144,21 @@ class CacheDecorator implements CacheInterface
                 });
 
                 $notFound = (array)$this->cache->getMultiple(array_values($missedKey), null);
-                array_walk($notFound, function (&$value) {
-                    if (is_string($value)) {
+
+                array_walk($notFound, function (&$value) use ($default) {
+                    if ($value !== null) {
                         $value = $this->decode($value);
+                    } elseif (is_callable($default)) {
+                        $value = $default();
+                    } else {
+                        $value = $default;
                     }
                 });
 
                 return array_merge($cached, $notFound);
             }
         } catch (InvalidArgumentException $e) {
-            throw new InvalidKeyException();
+            return false;
         }
 
         return $cached;
@@ -166,20 +169,20 @@ class CacheDecorator implements CacheInterface
      */
     public function setMultiple($values, $ttl = null)
     {
-        $encodedValues = $values;
+        $encodedValues = (array)$values;
         array_walk($encodedValues, function (&$v, &$k) {
             $k = $this->buildKey($k);
             $v = $this->encode($v);
         });
 
         try {
-            $status = $this->cache->setMultiple($encodedValues, $ttl);
+            $status = $this->cache->setMultiple($encodedValues, $ttl ?? 300);
         } catch (InvalidArgumentException $e) {
-            throw new InvalidKeyException();
+            return false;
         }
 
         if ($status) {
-            $this->setToMemory($values);
+            $this->setToMemory((array)$values);
         }
 
         return $status;
@@ -197,7 +200,7 @@ class CacheDecorator implements CacheInterface
         try {
             $status = $this->cache->deleteMultiple($keys);
         } catch (InvalidArgumentException $e) {
-            throw new InvalidKeyException();
+            return false;
         }
 
         if ($status) {

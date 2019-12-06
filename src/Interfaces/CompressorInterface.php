@@ -1,8 +1,9 @@
 <?php
 
-namespace  Natso\Interfaces;
+namespace Natso\Interfaces;
 
-interface CompressorInterface {
+interface CompressorInterface
+{
 
     /**
      * @param mixed $value
