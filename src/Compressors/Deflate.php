@@ -4,7 +4,7 @@ namespace Natso\Compressors;
 
 use Natso\Interfaces\CompressorInterface;
 
-class Zlib implements CompressorInterface
+class Deflate implements CompressorInterface
 {
     /**
      * @var int The level of compression
@@ -14,7 +14,7 @@ class Zlib implements CompressorInterface
     /**
      * @param int $level
      */
-    public function __construct(int $level = -1)
+    public function __construct(int $level = 6)
     {
         $this->level = $level;
     }
@@ -24,7 +24,7 @@ class Zlib implements CompressorInterface
      */
     public function compress(?string $value): string
     {
-        return gzcompress($value, $this->level);
+        return gzdeflate($value, $this->level);
     }
 
     /**
@@ -32,6 +32,6 @@ class Zlib implements CompressorInterface
      */
     public function uncompress(string $value)
     {
-        return gzuncompress($value);
+        return gzinflate($value);
     }
 }
