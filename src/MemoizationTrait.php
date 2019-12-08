@@ -55,7 +55,7 @@ trait MemoizationTrait {
             if (isset($this->memory[$key])) {
                 $found[$key] = $this->memory[$key];
             } else {
-                $notFound[$key] = null;
+                $notFound[] = $key;
             }
         }
 

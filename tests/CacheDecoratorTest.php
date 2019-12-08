@@ -44,13 +44,14 @@ final class CacheDecoratorTest extends TestCase
      */
     public function __construct($name = null, array $data = [], $dataName = '')
     {
-        // mock dependencies
         $this->cacheMock = $this->createMock(CacheInterface::class);
         $this->keyBuilderMock = $this->createMock(KeyBuilderInterface::class);
         $this->serializerMock = $this->createMock(SerializerInterface::class);
         $this->compressorMock = $this->createMock(CompressorInterface::class);
 
-        $this->keyBuilderMock->expects($this->any())->method('build')->will($this->returnArgument(0));
+        $this->keyBuilderMock->expects($this->any())
+            ->method('build')
+            ->will($this->returnArgument(0));
 
         $this->client = new CacheDecorator(
             $this->cacheMock,
@@ -67,6 +68,8 @@ final class CacheDecoratorTest extends TestCase
         return [
             'string' => ['value', 'stringKey', 's:5:"value";', 'x�+�2�R*K�)MU�\0008�'],
             'emptyString' => ['', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
+            'emptyStrings' => ['      
+            ', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
             'null' => [null, 'nullKey', 'N;', 'x��\000\000�\000�'],
             'false' => [false, 'falseKey', 'b:0;', 'x�K�2�\000'],
             'object' => [new stdClass(), 'objectKey', 'O:8:"stdClass":0:{}', 'x�󷲰R*.Iq�I,.V�2���\000:F'],
@@ -85,50 +88,38 @@ final class CacheDecoratorTest extends TestCase
     {
         return [
             'string' => [
-                ['stringKey0' => 'value0', 'stringKey1' => 'value1', 'stringKey2' => 'value2'], // pair
-                [ // serialization map
-                    ['value0', 'value1', 'value2'],
-                    ['s:6:"value0";', 's:6:"value1";', 's:6:"value2";']
+                [
+                    'stringKey0' => 'value0',
+                    'stringKey1' => 'value1',
+                    'stringKey2' => 'value2'
                 ],
-                [ // compression map
-                    ['s:6:"value0";', 's:6:"value1";', 's:6:"value2";'],
-                    ['x�+�2�R*K�)M5P�\000/�', 'x�+�2�R*K�)M5T�\0002�', 'x�+�2�R*K�)M5R�\0005�']
-                ]
+                [
+                    'stringKey0' => 'x�+�2�R*K�)M5P�\000/�',
+                    'stringKey1' => 'x�+�2�R*K�)M5T�\0002�',
+                    'stringKey2' => 'x�+�2�R*K�)M5R�\0005�'
+                ],
             ],
-//            'empty' => [
-//                [null, ''],
-//                ['testMultiNullKey0', 'testMultiNullKey1']
-//            ],
-//            'bool' => [
-//                [false, false],
-//                ['testMultiFalseKey0', 'testMultiFalseKey2']
-//            ],
-//            'object' => [
-//                [new stdClass(), new stdClass()],
-//                ['testMultiObjectKey0', 'testMultiObjectKey1']
-//            ],
-//            'int' => [
-//                [0, 1, 2],
-//                ['testMultiIntKey0', 'testMultiIntKey1', 'testMultiIntKey2']
-//            ],
-//            'float' => [
-//                [0.0, 0.1, 0.3],
-//                ['testMultiFloatKey0', 'testMultiFloatKey1', 'testMultiFloatKey2']
-//            ],
-//            'nestedArray' => [
-//                [array('a' => 1, array('aa' => 11)), array('b' => 2, array('bb' => 22))],
-//                ['testMultiNestedArrayKey10', 'testMultiNestedArrayKey1']
-//            ],
-//            'mixed' => [
-//                [null, 'testValue', false, true, new stdClass()],
-//                [
-//                    'testMixedNestedKey0',
-//                    'testMixedNestedKey1',
-//                    'testMixedNestedKey2',
-//                    'testMixedNestedKey3',
-//                    'testMixedNestedKey4'
-//                ]
-//            ]
+            'empty' => [
+                [
+                    'emptyStringKey0' => '',
+                    'emptyStringKey1' => '  ',
+                ],
+                [
+                    'emptyStringKey0' => 'x�+�2�RR�\000E�',
+                    'emptyStringKey1' => 'x�+�2�RRPP�\000
+��',
+                ],
+            ],
+            'bool' => [
+                [
+                    'boolKey0' => false,
+                    'boolKey1' => true,
+                ],
+                [
+                    'boolKey0' => 'x�K�2�\000',
+                    'boolKey1' => 'x�K�2�\000�',
+                ],
+            ]
         ];
     }
 
@@ -177,31 +168,89 @@ final class CacheDecoratorTest extends TestCase
     /**
      * @dataProvider multiProvider
      */
-	public function testSetMultiple($pair, $serializationMap, $compressionMap)
+	public function testSetMultiple($keyValue)
     {
-        $this->serializerMock->expects($this->any())->method('serialize')->will($this->returnValueMap($serializationMap));
-        $this->compressorMock->expects($this->any())->method('compress')->will($this->returnValueMap($compressionMap));
-        $this->assertSame(true, $this->client->setMultiple($pair));
+        $this->serializerMock->expects($this->any())->method('serialize')->willReturnMap($this->getSerializationMap());
+        $this->compressorMock->expects($this->any())->method('compress')->willReturnMap($this->getCompressionMap());
+        $this->cacheMock->expects($this->once())->method('setMultiple')->willReturn(true);
+        $this->assertSame(true, $this->client->setMultiple($keyValue));
     }
-//
-//	/**
-//     * @dataProvider multiProvider
-//     * @depends testConnection
-//     * @depends testSetMultiple
-//	 */
-//	public function testGetMultiple($values, $keys, $client)
-//	{
-//        $pair = array_fill_keys($keys,$values);
-//		$this->assertEquals($pair, $client->mGet($keys), 'mGet operation failure');
-//	}
-//
-//	/**
-//     * @dataProvider multiProvider
-//	 * @depends testConnection
-//	 * @depends testGetMultiple
-//	 */
-//	public function testDeleteMultiple($values, $keys, $client)
-//	{
-//		$this->assertSame(true, $client->mDelete($keys), 'mDelete operation failure');
-//	}
+
+	/**
+     * @dataProvider multiProvider
+	 */
+	public function testGetMultiple($keyValue, $cachedValues)
+	{
+        $this->serializerMock->expects($this->any())
+            ->method('deserialize')
+            ->willReturnMap($this->getSerializationMap(true));
+
+        $this->compressorMock->expects($this->any())
+            ->method('uncompress')
+            ->willReturnMap($this->getCompressionMap(true));
+
+        $this->cacheMock->expects($this->once())->method('getMultiple')->willReturn($cachedValues);
+		$this->assertEquals($keyValue, $this->client->getMultiple(array_keys($keyValue)));
+	}
+
+    /**
+     * @dataProvider multiProvider
+     */
+    public function testDeleteMultiple($keyValue)
+    {
+        $this->cacheMock->expects($this->once())->method('deleteMultiple')->willReturn(true);
+        $this->assertSame(true, $this->client->deleteMultiple($keyValue));
+    }
+
+    protected function getSerializationMap($flip = false)
+    {
+        if (!$flip) {
+            return [
+                ['value0', 's:6:"value0";'],
+                ['value1', 's:6:"value1";'],
+                ['value2', 's:6:"value2";'],
+                [false, 'b:0;'],
+                [true, 'b:1;'],
+                ['', 's:0:"";'],
+                ['  ', 's:2:"  ";']
+            ];
+        } else {
+            return [
+                ['s:6:"value0";', 'value0'],
+                ['s:6:"value1";', 'value1'],
+                ['s:6:"value2";', 'value2'],
+                ['b:0;', false],
+                ['b:1;', true],
+                ['s:0:"";', ''],
+                ['s:2:"  ";', '  ']
+            ];
+        }
+    }
+
+    protected function getCompressionMap($flip = false)
+    {
+        if (!$flip) {
+            return [
+                ['s:6:"value0";', 'x�+�2�R*K�)M5P�\000/�'],
+                ['s:6:"value1";', 'x�+�2�R*K�)M5T�\0002�'],
+                ['s:6:"value2";', 'x�+�2�R*K�)M5R�\0005�'],
+                ['b:0;', 'x�K�2�\000'],
+                ['b:1;', 'x�K�2�\000�'],
+                ['s:0:"";', 'x�+�2�RR�\000E�'],
+                ['s:2:"  ";', 'x�+�2�RRPP�\000
+��']
+            ];
+        } else {
+            return [
+                ['x�+�2�R*K�)M5P�\000/�', 's:6:"value0";'],
+                ['x�+�2�R*K�)M5T�\0002�', 's:6:"value1";'],
+                ['x�+�2�R*K�)M5R�\0005�', 's:6:"value2";'],
+                ['x�K�2�\000', 'b:0;'],
+                ['x�K�2�\000�', 'b:1;'],
+                ['x�+�2�RR�\000E�', 's:0:"";'],
+                ['x�+�2�RRPP�\000
+��', 's:2:"  ";']
+            ];
+        }
+    }
 }

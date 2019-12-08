@@ -143,7 +143,7 @@ class CacheDecorator implements CacheInterface
                     $this->buildKey($v);
                 });
 
-                $notFound = (array)$this->cache->getMultiple(array_values($missedKey), null);
+                $notFound = (array)$this->cache->getMultiple($missedKey);
 
                 array_walk($notFound, function (&$value) use ($default) {
                     if ($value !== null) {
