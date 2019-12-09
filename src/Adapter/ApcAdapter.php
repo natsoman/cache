@@ -1,11 +1,11 @@
 <?php
 
-namespace Natso\Adapters;
+namespace Natso\Adapter;
 
-use Natso\Exceptions\CacheException;
+use Natso\Exception\CacheException;
 use Psr\SimpleCache\CacheInterface;
 
-class Apc implements CacheInterface {
+class ApcAdapter implements CacheInterface {
 
     /**
      * @throws CacheException

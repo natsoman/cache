@@ -1,14 +1,14 @@
 <?php
 
-namespace Natso\Adapters;
+namespace Natso\Adapter;
 
 use RedisCluster;
 use Redis as PhpRedis;
 use Predis\Client as Predis;
 use Psr\SimpleCache\CacheInterface;
-use Natso\Exceptions\CacheException;
+use Natso\Exception\CacheException;
 
-class Redis implements CacheInterface
+class RedisAdapter implements CacheInterface
 {
 
     /**

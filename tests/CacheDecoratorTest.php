@@ -2,10 +2,10 @@
 
 namespace Natso\Tests;
 
-use Natso\CacheDecorator;
-use Natso\Interfaces\CompressorInterface;
-use Natso\Interfaces\KeyBuilderInterface;
-use Natso\Interfaces\SerializerInterface;
+use Natso\Cache;
+use Natso\Compressor\CompressorInterface;
+use Natso\KeyBuilderInterface;
+use Natso\Serializer\SerializerInterface;
 use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -53,7 +53,7 @@ final class CacheDecoratorTest extends TestCase
             ->method('build')
             ->will($this->returnArgument(0));
 
-        $this->client = new CacheDecorator(
+        $this->client = new Cache(
             $this->cacheMock,
             $this->serializerMock,
             $this->keyBuilderMock,

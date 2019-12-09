@@ -1,10 +1,8 @@
 <?php
 
-namespace Natso\Serializers;
+namespace Natso\Serializer;
 
-use Natso\Interfaces\SerializerInterface;
-
-class Native implements SerializerInterface
+class NativeSerializer implements SerializerInterface
 {
 
     /**

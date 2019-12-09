@@ -1,10 +1,10 @@
 <?php
 
-namespace Natso\Compressors;
+namespace Natso\Compressor;
 
 use Natso\Interfaces\CompressorInterface;
 
-class Zlib implements CompressorInterface
+class ZlibCompressor implements CompressorInterface
 {
     /**
      * @var int The level of compression

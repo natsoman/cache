@@ -1,6 +1,6 @@
 <?php
 
-namespace Natso\Interfaces;
+namespace Natso\Compressor;
 
 interface CompressorInterface
 {
@@ -13,7 +13,7 @@ interface CompressorInterface
 
     /**
      * @param string $value
-     * @return mixed
+     * @return string
      */
-    public function uncompress(string $value);
+    public function uncompress(string $value): string;
 }

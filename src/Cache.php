@@ -2,17 +2,17 @@
 
 namespace Natso;
 
+use Natso\Serializer\SerializerInterface;
 use Psr\SimpleCache\{
     CacheInterface,
     InvalidArgumentException
 };
-use Natso\Interfaces\{
-    KeyBuilderInterface,
-    SerializerInterface,
-    CompressorInterface
+use Natso\Compressor\{
+    CompressorInterface,
+    NullCompressor
 };
 
-class CacheDecorator implements CacheInterface
+class Cache implements CacheInterface
 {
     /**
      * @var MemoizationTrait
@@ -53,8 +53,8 @@ class CacheDecorator implements CacheInterface
     ) {
         $this->cache = $cache;
         $this->serializer = $serializer;
-        $this->keyBuilder = $keyBuilder;
-        $this->compressor = $compressor;
+        $this->keyBuilder = $keyBuilder ?? new SimpleKeyBuilder([]);
+        $this->compressor = $compressor ?? new NullCompressor();
     }
 
     /**
@@ -238,13 +238,9 @@ class CacheDecorator implements CacheInterface
      */
     protected function encode($value): string
     {
-        $value = $this->serializer->serialize($value);
-
-        if ($this->compressor !== null) {
-            return $this->compressor->compress($value);
-        }
-
-        return $value;
+        return $this->compressor->compress(
+            $this->serializer->serialize($value)
+        );
     }
 
     /**
@@ -253,12 +249,8 @@ class CacheDecorator implements CacheInterface
      */
     protected function decode(string $value)
     {
-        if ($this->compressor !== null) {
-            $value = $this->compressor->uncompress($value);
-        }
-
-        $value = $this->serializer->deserialize($value);
-
-        return $value;
+        return $this->serializer->deserialize(
+            $this->compressor->uncompress($value)
+        );
     }
 }

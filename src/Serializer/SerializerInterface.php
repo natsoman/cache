@@ -1,6 +1,6 @@
 <?php
 
-namespace Natso\Interfaces;
+namespace Natso\Serializer;
 
 interface SerializerInterface
 {

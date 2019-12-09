@@ -2,10 +2,9 @@
 
 namespace Natso;
 
-use Natso\Exceptions\InvalidKeyException;
-use Natso\Interfaces\KeyBuilderInterface;
+use Natso\Exception\InvalidKeyException;
 
-class KeyBuilder implements KeyBuilderInterface
+class SimpleKeyBuilder implements KeyBuilderInterface
 {
 
     /**

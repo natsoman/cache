@@ -1,6 +1,6 @@
 <?php
 
-namespace Natso\Exceptions;
+namespace Natso\Exception;
 
 use Throwable;
 use Exception;
