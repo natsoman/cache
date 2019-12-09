@@ -1,6 +1,6 @@
 <?php
 
-namespace Natso;
+namespace Natso\KeyBuilder;
 
 use Natso\Exception\InvalidKeyException;
 
@@ -13,7 +13,7 @@ class SimpleKeyBuilder implements KeyBuilderInterface
     protected $map;
 
     /**
-     * @inheritdoc
+     * @param array $map
      */
     public function __construct(array $map)
     {
@@ -22,7 +22,7 @@ class SimpleKeyBuilder implements KeyBuilderInterface
 
     /**
      * @param string $key
-     * @param mixed $args
+     * @param mixed []$args
      * @return string
      * @throws InvalidKeyException
      */
@@ -34,16 +34,11 @@ class SimpleKeyBuilder implements KeyBuilderInterface
             return $cacheKey;
         }
 
-        if (is_array($cacheKey)) {
-            return sprintf($cacheKey[0], ...$args ?? $cacheKey[1]);
-        }
-
-
         if (is_callable($cacheKey)) {
             return $cacheKey(...$args);
         }
 
-        throw new InvalidKeyException('Key cannot be mapped to a cache key.');
+        throw new InvalidKeyException('Key must be a string or a callback which returns string');
     }
 
     /**
@@ -53,13 +48,5 @@ class SimpleKeyBuilder implements KeyBuilderInterface
     protected function map($key)
     {
         return isset($this->map[$key]) ? $this->map[$key] : $key;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getMap(): array
-    {
-        return $this->map;
     }
 }

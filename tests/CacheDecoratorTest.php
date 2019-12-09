@@ -4,7 +4,7 @@ namespace Natso\Tests;
 
 use Natso\Cache;
 use Natso\Compressor\CompressorInterface;
-use Natso\KeyBuilderInterface;
+use Natso\KeyBuilder\KeyBuilderInterface;
 use Natso\Serializer\SerializerInterface;
 use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;

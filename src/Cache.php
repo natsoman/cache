@@ -3,9 +3,12 @@
 namespace Natso;
 
 use Natso\Serializer\SerializerInterface;
+use Natso\KeyBuilder\{
+    KeyBuilderInterface,
+    SimpleKeyBuilder
+};
 use Psr\SimpleCache\{
-    CacheInterface,
-    InvalidArgumentException
+    CacheInterface
 };
 use Natso\Compressor\{
     CompressorInterface,
@@ -50,7 +53,8 @@ class Cache implements CacheInterface
         SerializerInterface $serializer,
         ?KeyBuilderInterface $keyBuilder,
         ?CompressorInterface $compressor
-    ) {
+    )
+    {
         $this->cache = $cache;
         $this->serializer = $serializer;
         $this->keyBuilder = $keyBuilder ?? new SimpleKeyBuilder([]);
@@ -69,14 +73,11 @@ class Cache implements CacheInterface
             return $value;
         }
 
-        try {
-            $cacheValue = $this->cache->get($cacheKey);
-            if ($cacheValue !== null) {
-                $value = $this->decode($cacheValue);
-            }
-        } catch (InvalidArgumentException $e) {
-            return null;
+        $cacheValue = $this->cache->get($cacheKey);
+        if ($cacheValue !== null) {
+            $value = $this->decode($cacheValue);
         }
+
 
         if ($value === null && is_callable($default)) {
             if (($value = $default()) !== null) {
@@ -94,15 +95,11 @@ class Cache implements CacheInterface
      */
     public function set($key, $value, $ttl = null)
     {
-        try {
-            $cacheKey = $this->buildKey($key);
-            $value = $this->encode($value);
-            $status = $this->cache->set($cacheKey, $value, $ttl);
-            if ($status === true) {
-                $this->addToMemory($cacheKey, $value);
-            }
-        } catch (InvalidArgumentException $e) {
-            return false;
+        $cacheKey = $this->buildKey($key);
+        $value = $this->encode($value);
+
+        if (($status = $this->cache->set($cacheKey, $value, $ttl)) === true) {
+            $this->addToMemory($cacheKey, $value);
         }
 
         return $status;
@@ -113,13 +110,7 @@ class Cache implements CacheInterface
      */
     public function delete($key)
     {
-        try {
-            $status = $this->cache->delete($this->buildKey($key));
-        } catch (InvalidArgumentException $e) {
-            return false;
-        }
-
-        return $status;
+        return $this->cache->delete($this->buildKey($key));
     }
 
     /**
@@ -137,28 +128,24 @@ class Cache implements CacheInterface
     {
         list($cached, $missedKey) = $this->searchKeys((array)$keys);
 
-        try {
-            if (count($missedKey) > 0) {
-                array_walk($missedKey, function (&$v) {
-                    $this->buildKey($v);
-                });
+        if (count($missedKey) > 0) {
+            array_walk($missedKey, function (&$v) {
+                $this->buildKey($v);
+            });
 
-                $notFound = (array)$this->cache->getMultiple($missedKey);
+            $notFound = (array)$this->cache->getMultiple($missedKey);
 
-                array_walk($notFound, function (&$value) use ($default) {
-                    if ($value !== null) {
-                        $value = $this->decode($value);
-                    } elseif (is_callable($default)) {
-                        $value = $default();
-                    } else {
-                        $value = $default;
-                    }
-                });
+            array_walk($notFound, function (&$value) use ($default) {
+                if ($value !== null) {
+                    $value = $this->decode($value);
+                } elseif (is_callable($default)) {
+                    $value = $default();
+                } else {
+                    $value = $default;
+                }
+            });
 
-                return array_merge($cached, $notFound);
-            }
-        } catch (InvalidArgumentException $e) {
-            return false;
+            return array_merge($cached, $notFound);
         }
 
         return $cached;
@@ -175,11 +162,7 @@ class Cache implements CacheInterface
             $v = $this->encode($v);
         });
 
-        try {
-            $status = $this->cache->setMultiple($encodedValues, $ttl ?? 300);
-        } catch (InvalidArgumentException $e) {
-            return false;
-        }
+        $status = $this->cache->setMultiple($encodedValues, $ttl ?? 300);
 
         if ($status) {
             $this->setToMemory((array)$values);
@@ -197,11 +180,7 @@ class Cache implements CacheInterface
             return $this->buildKey($v);
         }, (array)$keys);
 
-        try {
-            $status = $this->cache->deleteMultiple($keys);
-        } catch (InvalidArgumentException $e) {
-            return false;
-        }
+        $status = $this->cache->deleteMultiple($keys);
 
         if ($status) {
             array_walk($keys, function ($v) {
@@ -225,14 +204,12 @@ class Cache implements CacheInterface
      */
     public function buildKey($key, ...$args): string
     {
-        if ($this->keyBuilder !== null) {
-            return $this->keyBuilder->build($key, ...$args);
-        }
-
-        return $key;
+        return $this->keyBuilder->build($key, ...$args);
     }
 
     /**
+     * Prepare value for caching
+     *
      * @param mixed $value
      * @return string
      */
@@ -244,6 +221,8 @@ class Cache implements CacheInterface
     }
 
     /**
+     *
+     *
      * @param string|null $value
      * @return mixed
      */

@@ -1,6 +1,6 @@
 <?php
 
-namespace Natso;
+namespace Natso\KeyBuilder;
 
 use Natso\Exception\InvalidKeyException;
 
