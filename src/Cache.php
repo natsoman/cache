@@ -221,7 +221,7 @@ class Cache implements CacheInterface
     }
 
     /**
-     *
+     * Restore cache value
      *
      * @param string|null $value
      * @return mixed
