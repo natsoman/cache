@@ -1,4 +1,4 @@
-#### A flexible PSR-16 decorator.
+A flexible PSR-16 decorator.
 
 ## Use
 
