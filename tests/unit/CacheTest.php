@@ -16,22 +16,22 @@ final class CacheTest extends TestCase
     /**
      * @var CacheInterface
      */
-    protected $cacheMock;
+    protected $cache;
 
     /**
      * @var KeyBuilderInterface
      */
-    protected $keyBuilderMock;
+    protected $keyBuilder;
 
     /**
      * @var SerializerInterface
      */
-    protected $serializerMock;
+    protected $serializer;
 
     /**
      * @var CompressorInterface
      */
-    protected $compressorMock;
+    protected $compressor;
 
     /**
      * @var CacheInterface
@@ -45,16 +45,16 @@ final class CacheTest extends TestCase
      */
     public function __construct($name = null, array $data = [], $dataName = '')
     {
-        $this->cacheMock = $this->createMock(CacheInterface::class);
-        $this->keyBuilderMock = $this->createMock(NullKeyBuilder::class);
-        $this->serializerMock = $this->createMock(SerializerInterface::class);
-        $this->compressorMock = $this->createMock(CompressorInterface::class);
+        $this->cache = $this->createMock(CacheInterface::class);
+        $this->keyBuilder = $this->createMock(NullKeyBuilder::class);
+        $this->serializer = $this->createMock(SerializerInterface::class);
+        $this->compressor = $this->createMock(CompressorInterface::class);
 
         $this->client = new Cache(
-            $this->cacheMock,
-            $this->serializerMock,
-            $this->keyBuilderMock,
-            $this->compressorMock
+            $this->cache,
+            $this->serializer,
+            $this->keyBuilder,
+            $this->compressor
         );
 
         parent::__construct($name, $data, $dataName);
@@ -65,9 +65,9 @@ final class CacheTest extends TestCase
      */
     public function testSet($value, $key, $serializedValue, $compressedValue)
     {
-        $this->serializerMock->expects($this->once())->method('serialize')->willReturn($serializedValue);
-        $this->compressorMock->expects($this->once())->method('compress')->willReturn($compressedValue);
-        $this->cacheMock->expects($this->once())->method('set')->willReturn(true);
+        $this->serializer->expects($this->once())->method('serialize')->willReturn($serializedValue);
+        $this->compressor->expects($this->once())->method('compress')->willReturn($compressedValue);
+        $this->cache->expects($this->once())->method('set')->willReturn(true);
         $this->assertSame(true, $this->client->set($key, $value));
     }
 
@@ -76,9 +76,9 @@ final class CacheTest extends TestCase
      */
     public function testGet($value, $key, $serializedValue, $compressedValue)
     {
-        $this->serializerMock->expects($this->once())->method('deserialize')->willReturn($value);
-        $this->compressorMock->expects($this->once())->method('uncompress')->willReturn($serializedValue);
-        $this->cacheMock->expects($this->once())->method('get')->willReturn($compressedValue);
+        $this->serializer->expects($this->once())->method('deserialize')->willReturn($value);
+        $this->compressor->expects($this->once())->method('uncompress')->willReturn($serializedValue);
+        $this->cache->expects($this->once())->method('get')->willReturn($compressedValue);
         $actualValue = $this->client->get($key);
         $this->assertEquals($value, $actualValue);
     }
@@ -88,7 +88,7 @@ final class CacheTest extends TestCase
 	 */
 	public function testHas($value, $key, $serializedValue, $compressedValue)
 	{
-        $this->cacheMock->expects($this->once())->method('has')->willReturn(true);
+        $this->cache->expects($this->once())->method('has')->willReturn(true);
 		$this->assertSame(true, $this->client->has($key));
 	}
 
@@ -98,7 +98,7 @@ final class CacheTest extends TestCase
      */
     public function testDelete($value, $key, $serializedValue, $compressedValue)
     {
-        $this->cacheMock->expects($this->once())->method('delete')->willReturn(true);
+        $this->cache->expects($this->once())->method('delete')->willReturn(true);
         $this->assertSame(true, $this->client->delete($key));
     }
 
@@ -107,9 +107,9 @@ final class CacheTest extends TestCase
      */
 	public function testSetMultiple($keyValue)
     {
-        $this->serializerMock->expects($this->any())->method('serialize')->willReturnMap($this->getSerializationMap());
-        $this->compressorMock->expects($this->any())->method('compress')->willReturnMap($this->getCompressionMap());
-        $this->cacheMock->expects($this->once())->method('setMultiple')->willReturn(true);
+        $this->serializer->expects($this->any())->method('serialize')->willReturnMap($this->getSerializationMap());
+        $this->compressor->expects($this->any())->method('compress')->willReturnMap($this->getCompressionMap());
+        $this->cache->expects($this->once())->method('setMultiple')->willReturn(true);
         $this->assertSame(true, $this->client->setMultiple($keyValue));
     }
 
@@ -118,15 +118,15 @@ final class CacheTest extends TestCase
 	 */
 	public function testGetMultiple($keyValue, $cachedValues)
 	{
-        $this->serializerMock->expects($this->any())
+        $this->serializer->expects($this->any())
             ->method('deserialize')
             ->willReturnMap($this->getSerializationMap(true));
 
-        $this->compressorMock->expects($this->any())
+        $this->compressor->expects($this->any())
             ->method('uncompress')
             ->willReturnMap($this->getCompressionMap(true));
 
-        $this->cacheMock->expects($this->once())->method('getMultiple')->willReturn($cachedValues);
+        $this->cache->expects($this->once())->method('getMultiple')->willReturn($cachedValues);
 		$this->assertEquals($keyValue, $this->client->getMultiple(array_keys($keyValue)));
 	}
 
@@ -135,7 +135,7 @@ final class CacheTest extends TestCase
      */
     public function testDeleteMultiple($keyValue)
     {
-        $this->cacheMock->expects($this->once())->method('deleteMultiple')->willReturn(true);
+        $this->cache->expects($this->once())->method('deleteMultiple')->willReturn(true);
         $this->assertSame(true, $this->client->deleteMultiple($keyValue));
     }
 
