@@ -4,7 +4,7 @@ A flexible PSR-16 decorator.
 ## Use
 
 ### Prepare dependencies
-- \Psr\SimpleCache\CacheInterface
+\Psr\SimpleCache\CacheInterface
 
 ```
 $service = new \RedisCluster(
@@ -22,12 +22,12 @@ $service = new \RedisCluster(
 $adapter = new \Natso\Adapter\RedisAdapter($service);
 ```
 
-- \Natso\Serializer\SerializerInterface
+\Natso\Serializer\SerializerInterface
 ```
 $serializer = new \Natso\Serializer\NativeSerializer();
 ``` 
 
-- \Natso\KeyBuilder\KeyBuilderInterface (optional)
+\Natso\KeyBuilder\KeyBuilderInterface (optional)
 ```
 
 $map = [
@@ -39,7 +39,7 @@ $map = [
 $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($map);
 ``` 
 
-- \Natso\Compressor\CompressorInterface (optional)
+\Natso\Compressor\CompressorInterface (optional)
 ```
 $compressor = new \Natso\Compressor\ZlibCompressor();
 ``` 
