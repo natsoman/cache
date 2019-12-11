@@ -3,7 +3,7 @@ A flexible PSR-16 decorator.
 
 ## Use
 
-#### Prepare dependencies
+### Prepare dependencies
 - \Psr\SimpleCache\CacheInterface
 
 ```
@@ -43,7 +43,7 @@ $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($map);
 ```
 $compressor = new \Natso\Compressor\ZlibCompressor();
 ``` 
-#### Inject dependencies on the wrapper
+### Inject dependencies on the wrapper
 ```
 $cache = new \Natso\Cache(
     $adapter,
@@ -53,17 +53,17 @@ $cache = new \Natso\Cache(
 );
 
 $key = '101';
-$set    = $cache->set('key',101);
-$has    = $cache->has('key');
-$get    = $cache->get('key');
-$delete = $cache->delete('key');
+$cache->set('key',101);
+$cache->has('key');
+$cache->get('key');
+$cache->delete('key');
 
 $keys = ['key0', 'key1', 'key2'];
-$setMultiple    = $cache->setMultiple(['key0' => null, 'key1' => 101, 'key2' => new stdClass()]);
-$getMultiple    = $cache->getMultiple($keys);
-$deleteMultiple = $cache->deleteMultiple($keys);
-$getMultiple    = $cache->getMultiple($keys);
+$cache->setMultiple(['key0' => null, 'key1' => 101, 'key2' => new stdClass()]);
+$cache->getMultiple($keys);
+$cache->deleteMultiple($keys);
+$cache->getMultiple($keys);
 
 ```
 
-## Memoization 
+## Memoization
