@@ -1,4 +1,3 @@
-# cache
 A flexible PSR-16 decorator.
 
 ## Use
@@ -33,7 +32,7 @@ $serializer = new \Natso\Serializer\NativeSerializer();
 $map = [
     'staticKey'     => 'staticCacheKey',
     'uniqueKey'     => sprintf('uniqueCacheKey:%s', $_GET['id']),
-    'closureKey'    => function () { return 'closureKey'; }
+    'closureKey'    => function () { return 'something that changes in the runtime'; }
 ];
 
 $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($map);
@@ -53,16 +52,15 @@ $cache = new \Natso\Cache(
 );
 
 $key = '101';
-$cache->set('key',101);
-$cache->has('key');
-$cache->get('key');
-$cache->delete('key');
+$cache->set($key,101);
+$cache->has($key);
+$cache->get($key);
+$cache->delete($key);
 
 $keys = ['key0', 'key1', 'key2'];
 $cache->setMultiple(['key0' => null, 'key1' => 101, 'key2' => new stdClass()]);
 $cache->getMultiple($keys);
 $cache->deleteMultiple($keys);
-$cache->getMultiple($keys);
 
 ```
 
