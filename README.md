@@ -32,7 +32,7 @@ $serializer = new \Natso\Serializer\NativeSerializer();
 
 $map = [
     'staticKey'     => 'staticCacheKey',
-    'staticKey'     => sprintf('staticKey:%s', $_GET['id']),
+    'uniqueKey'     => sprintf('uniqueCacheKey:%s', $_GET['id']),
     'closureKey'    => function () { return 'closureKey'; }
 ];
 
