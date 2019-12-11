@@ -12,7 +12,8 @@ interface KeyBuilderInterface
      * @param string $key
      * @param mixed  ...$args Extra arguments.
      *
-     * @throws InvalidArgumentException Must be thrown if the $key string is not acceptable.
+     * @throws InvalidArgumentException
+     *  MUST be thrown if the $key string is not string or callback which returns string.
      *
      * @return string The key that should be cached.
      */

@@ -82,7 +82,7 @@ class RedisAdapter implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        return $this->service->del($keys) === count((array)$keys) ? true : false;
+        return (bool)$this->service->del($keys);
     }
 
     /**

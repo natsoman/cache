@@ -45,21 +45,28 @@ trait MemoizationTrait {
 
     /**
      * @param array $keys
+     */
+    protected function unsetFromMemory(array $keys): void
+    {
+        $this->memory = array_diff_key($this->memory, array_flip($keys));
+    }
+
+    /**
+     * @param array $keys []
      * @return array
      */
     protected function searchKeys(array $keys): array
     {
-        $found = $notFound = [];
-
+        $hits = $misses = [];
         foreach($keys as $key) {
             if (isset($this->memory[$key])) {
-                $found[$key] = $this->memory[$key];
+                $hits[$key] = $this->memory[$key];
             } else {
-                $notFound[] = $key;
+                $misses[] = $key;
             }
         }
 
-        return [$found,$notFound];
+        return [$hits,$misses];
     }
 
     protected function cleanMemory(): void

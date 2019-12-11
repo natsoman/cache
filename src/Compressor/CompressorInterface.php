@@ -6,10 +6,10 @@ interface CompressorInterface
 {
 
     /**
-     * @param mixed $value
-     * @return mixed
+     * @param string $value
+     * @return string
      */
-    public function compress(?string $value): string;
+    public function compress(string $value): string;
 
     /**
      * @param string $value

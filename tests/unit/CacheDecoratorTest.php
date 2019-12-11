@@ -5,6 +5,7 @@ namespace Natso\Tests;
 use Natso\Cache;
 use Natso\Compressor\CompressorInterface;
 use Natso\KeyBuilder\KeyBuilderInterface;
+use Natso\KeyBuilder\NullKeyBuilder;
 use Natso\Serializer\SerializerInterface;
 use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;
@@ -45,13 +46,9 @@ final class CacheDecoratorTest extends TestCase
     public function __construct($name = null, array $data = [], $dataName = '')
     {
         $this->cacheMock = $this->createMock(CacheInterface::class);
-        $this->keyBuilderMock = $this->createMock(KeyBuilderInterface::class);
+        $this->keyBuilderMock = $this->createMock(NullKeyBuilder::class);
         $this->serializerMock = $this->createMock(SerializerInterface::class);
         $this->compressorMock = $this->createMock(CompressorInterface::class);
-
-        $this->keyBuilderMock->expects($this->any())
-            ->method('build')
-            ->will($this->returnArgument(0));
 
         $this->client = new Cache(
             $this->cacheMock,
@@ -61,66 +58,6 @@ final class CacheDecoratorTest extends TestCase
         );
 
         parent::__construct($name, $data, $dataName);
-    }
-
-    public function provider()
-    {
-        return [
-            'string' => ['value', 'stringKey', 's:5:"value";', 'x�+�2�R*K�)MU�\0008�'],
-            'emptyString' => ['', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
-            'emptyStrings' => ['      
-            ', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
-            'null' => [null, 'nullKey', 'N;', 'x��\000\000�\000�'],
-            'false' => [false, 'falseKey', 'b:0;', 'x�K�2�\000'],
-            'object' => [new stdClass(), 'objectKey', 'O:8:"stdClass":0:{}', 'x�󷲰R*.Iq�I,.V�2���\000:F'],
-            'int' => [1, 'intKey', 'i:1;', 'x�˴2�\000�'],
-            'double' => [0.11, 'doubleKey', 'd:0.11;', 'x�K�2�34�\000��'],
-            'nestedArray' => [
-                ['a' => 3, 'b' => 2, ['aa' => 22]],
-                'nestedArrayKey',
-                'a:3:{s:1:"a";i:3;s:1:"b";i:2;i:0;a:1:{s:2:"aa";i:22;}}',
-                'x�K�2��.�2�RJT�δ2���@l# 6�N����*���kk�8�'
-            ],
-        ];
-    }
-
-    public function multiProvider()
-    {
-        return [
-            'string' => [
-                [
-                    'stringKey0' => 'value0',
-                    'stringKey1' => 'value1',
-                    'stringKey2' => 'value2'
-                ],
-                [
-                    'stringKey0' => 'x�+�2�R*K�)M5P�\000/�',
-                    'stringKey1' => 'x�+�2�R*K�)M5T�\0002�',
-                    'stringKey2' => 'x�+�2�R*K�)M5R�\0005�'
-                ],
-            ],
-            'empty' => [
-                [
-                    'emptyStringKey0' => '',
-                    'emptyStringKey1' => '  ',
-                ],
-                [
-                    'emptyStringKey0' => 'x�+�2�RR�\000E�',
-                    'emptyStringKey1' => 'x�+�2�RRPP�\000
-��',
-                ],
-            ],
-            'bool' => [
-                [
-                    'boolKey0' => false,
-                    'boolKey1' => true,
-                ],
-                [
-                    'boolKey0' => 'x�K�2�\000',
-                    'boolKey1' => 'x�K�2�\000�',
-                ],
-            ]
-        ];
     }
 
     /**
@@ -200,6 +137,67 @@ final class CacheDecoratorTest extends TestCase
     {
         $this->cacheMock->expects($this->once())->method('deleteMultiple')->willReturn(true);
         $this->assertSame(true, $this->client->deleteMultiple($keyValue));
+    }
+
+
+    public function provider()
+    {
+        return [
+            'string' => ['value', 'stringKey', 's:5:"value";', 'x�+�2�R*K�)MU�\0008�'],
+            'emptyString' => ['', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
+            'emptyStrings' => ['      
+            ', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
+            'null' => [null, 'nullKey', 'N;', 'x��\000\000�\000�'],
+            'false' => [false, 'falseKey', 'b:0;', 'x�K�2�\000'],
+            'object' => [new stdClass(), 'objectKey', 'O:8:"stdClass":0:{}', 'x�󷲰R*.Iq�I,.V�2���\000:F'],
+            'int' => [1, 'intKey', 'i:1;', 'x�˴2�\000�'],
+            'double' => [0.11, 'doubleKey', 'd:0.11;', 'x�K�2�34�\000��'],
+            'nestedArray' => [
+                ['a' => 3, 'b' => 2, ['aa' => 22]],
+                'nestedArrayKey',
+                'a:3:{s:1:"a";i:3;s:1:"b";i:2;i:0;a:1:{s:2:"aa";i:22;}}',
+                'x�K�2��.�2�RJT�δ2���@l# 6�N����*���kk�8�'
+            ],
+        ];
+    }
+
+    public function multiProvider()
+    {
+        return [
+            'string' => [
+                [
+                    'stringKey0' => 'value0',
+                    'stringKey1' => 'value1',
+                    'stringKey2' => 'value2'
+                ],
+                [
+                    'stringKey0' => 'x�+�2�R*K�)M5P�\000/�',
+                    'stringKey1' => 'x�+�2�R*K�)M5T�\0002�',
+                    'stringKey2' => 'x�+�2�R*K�)M5R�\0005�'
+                ],
+            ],
+            'empty' => [
+                [
+                    'emptyStringKey0' => '',
+                    'emptyStringKey1' => '  ',
+                ],
+                [
+                    'emptyStringKey0' => 'x�+�2�RR�\000E�',
+                    'emptyStringKey1' => 'x�+�2�RRPP�\000
+��',
+                ],
+            ],
+            'bool' => [
+                [
+                    'boolKey0' => false,
+                    'boolKey1' => true,
+                ],
+                [
+                    'boolKey0' => 'x�K�2�\000',
+                    'boolKey1' => 'x�K�2�\000�',
+                ],
+            ]
+        ];
     }
 
     protected function getSerializationMap($flip = false)

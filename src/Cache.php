@@ -3,12 +3,12 @@
 namespace Natso;
 
 use Natso\Serializer\SerializerInterface;
-use Natso\KeyBuilder\{
-    KeyBuilderInterface,
-    SimpleKeyBuilder
-};
 use Psr\SimpleCache\{
     CacheInterface
+};
+use Natso\KeyBuilder\{
+    KeyBuilderInterface,
+    NullKeyBuilder
 };
 use Natso\Compressor\{
     CompressorInterface,
@@ -53,11 +53,10 @@ class Cache implements CacheInterface
         SerializerInterface $serializer,
         ?KeyBuilderInterface $keyBuilder,
         ?CompressorInterface $compressor
-    )
-    {
+    ) {
         $this->cache = $cache;
         $this->serializer = $serializer;
-        $this->keyBuilder = $keyBuilder ?? new SimpleKeyBuilder([]);
+        $this->keyBuilder = $keyBuilder ?? new NullKeyBuilder();
         $this->compressor = $compressor ?? new NullCompressor();
     }
 
@@ -67,24 +66,15 @@ class Cache implements CacheInterface
     public function get($key, $default = null)
     {
         $cacheKey = $this->buildKey($key);
-        $value = $this->getFromMemory($cacheKey);
-
-        if ($value !== null) {
+        if (($value = $this->getFromMemory($cacheKey)) !== null) {
             return $value;
         }
 
         $cacheValue = $this->cache->get($cacheKey);
-        if ($cacheValue !== null) {
-            $value = $this->decode($cacheValue);
-        }
-
-
-        if ($value === null && is_callable($default)) {
-            if (($value = $default()) !== null) {
-                $this->set($key, $value);
-            }
+        if (is_string($cacheValue)) {
+            $this->addToMemory($cacheKey, $this->decode($cacheValue));
         } else {
-            $this->addToMemory($cacheKey, $value);
+            return $default;
         }
 
         return $this->getFromMemory($cacheKey);
@@ -96,9 +86,7 @@ class Cache implements CacheInterface
     public function set($key, $value, $ttl = null)
     {
         $cacheKey = $this->buildKey($key);
-        $value = $this->encode($value);
-
-        if (($status = $this->cache->set($cacheKey, $value, $ttl)) === true) {
+        if (($status = $this->cache->set($cacheKey, $this->encode($value), $ttl)) === true) {
             $this->addToMemory($cacheKey, $value);
         }
 
@@ -108,47 +96,27 @@ class Cache implements CacheInterface
     /**
      * @inheritdoc
      */
-    public function delete($key)
-    {
-        return $this->cache->delete($this->buildKey($key));
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function clear()
-    {
-        $this->cache->clear();
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function getMultiple($keys, $default = null)
     {
-        list($cached, $missedKey) = $this->searchKeys((array)$keys);
-
-        if (count($missedKey) > 0) {
-            array_walk($missedKey, function (&$v) {
+        list($hits, $misses) = $this->searchKeys((array)$keys);
+        if (count($misses) > 0) {
+            array_walk($misses, function (&$v) {
                 $this->buildKey($v);
             });
 
-            $notFound = (array)$this->cache->getMultiple($missedKey);
-
-            array_walk($notFound, function (&$value) use ($default) {
+            $cacheHits = (array)$this->cache->getMultiple($misses);
+            array_walk($cacheHits, function (&$value) use ($default) {
                 if ($value !== null) {
                     $value = $this->decode($value);
-                } elseif (is_callable($default)) {
-                    $value = $default();
                 } else {
                     $value = $default;
                 }
             });
 
-            return array_merge($cached, $notFound);
+            $hits = array_merge($hits, $cacheHits);
         }
 
-        return $cached;
+        return $hits;
     }
 
     /**
@@ -162,9 +130,7 @@ class Cache implements CacheInterface
             $v = $this->encode($v);
         });
 
-        $status = $this->cache->setMultiple($encodedValues, $ttl ?? 300);
-
-        if ($status) {
+        if (($status = $this->cache->setMultiple($encodedValues, $ttl ?? 300))) {
             $this->setToMemory((array)$values);
         }
 
@@ -176,16 +142,9 @@ class Cache implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        $keys = array_map(function ($v) {
-            return $this->buildKey($v);
-        }, (array)$keys);
-
-        $status = $this->cache->deleteMultiple($keys);
-
-        if ($status) {
-            array_walk($keys, function ($v) {
-                $this->deleteFromMemory($v);
-            });
+        $keys = array_map(function ($v) { return $this->buildKey($v); }, (array)$keys);
+        if ($status = $this->cache->deleteMultiple($keys)) {
+            $this->unsetFromMemory($keys);
         }
 
         return $status;
@@ -194,9 +153,30 @@ class Cache implements CacheInterface
     /**
      * @inheritdoc
      */
+    public function delete($key)
+    {
+        $cacheKey = $this->buildKey($key);
+        if ($status = $this->cache->delete($cacheKey)) {
+            $this->deleteFromMemory($cacheKey);
+        }
+
+        return $status;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function clear()
+    {
+        $this->cache->clear();
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function has($key): bool
     {
-        return $this->cache->has($key);
+        return $this->cache->has($this->buildKey($key));
     }
 
     /**

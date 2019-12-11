@@ -2,8 +2,6 @@
 
 namespace Natso\Compressor;
 
-use Natso\Interfaces\CompressorInterface;
-
 class DeflateCompressor implements CompressorInterface
 {
     /**
@@ -22,7 +20,7 @@ class DeflateCompressor implements CompressorInterface
     /**
      * @inheritdoc
      */
-    public function compress(?string $value): string
+    public function compress(string $value): string
     {
         return gzdeflate($value, $this->level);
     }
@@ -30,7 +28,7 @@ class DeflateCompressor implements CompressorInterface
     /**
      * @inheritdoc
      */
-    public function uncompress(string $value)
+    public function uncompress(string $value): string
     {
         return gzinflate($value);
     }
