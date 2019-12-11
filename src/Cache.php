@@ -122,7 +122,7 @@ class Cache implements CacheInterface
     /**
      * @inheritdoc
      */
-    public function setMultiple($values, $ttl = null)
+    public function setMultiple($values, $ttl = null): bool
     {
         $encodedValues = (array)$values;
         array_walk($encodedValues, function (&$v, &$k) {

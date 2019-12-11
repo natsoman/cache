@@ -11,7 +11,7 @@ use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-final class CacheDecoratorTest extends TestCase
+final class CacheTest extends TestCase
 {
     /**
      * @var CacheInterface
@@ -138,7 +138,6 @@ final class CacheDecoratorTest extends TestCase
         $this->cacheMock->expects($this->once())->method('deleteMultiple')->willReturn(true);
         $this->assertSame(true, $this->client->deleteMultiple($keyValue));
     }
-
 
     public function provider()
     {
