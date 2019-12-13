@@ -2,6 +2,7 @@
 
 namespace Natso;
 
+use Natso\Serializer\NullSerializer;
 use Natso\Serializer\SerializerInterface;
 use Psr\SimpleCache\{
     CacheInterface
@@ -17,6 +18,8 @@ use Natso\Compressor\{
 
 class Cache implements CacheInterface
 {
+    const NAMESPACE_SEPARATOR = ':';
+
     /**
      * @var MemoizationTrait
      */
@@ -28,7 +31,7 @@ class Cache implements CacheInterface
     protected $cache;
 
     /**
-     * @var SerializerInterface
+     * @var SerializerInterface|null
      */
     protected $serializer;
 
@@ -43,21 +46,38 @@ class Cache implements CacheInterface
     protected $compressor;
 
     /**
+     * @var string
+     */
+    protected $namespace;
+
+    /**
+     * @var int Default Time To Live (seconds)
+     */
+    protected $ttl;
+
+    /**
      * @param CacheInterface $cache
      * @param SerializerInterface $serializer
      * @param KeyBuilderInterface|null $keyBuilder
      * @param CompressorInterface|null $compressor
+     * @param string|null $namespace
+     * @param int $ttl
      */
     public function __construct(
         CacheInterface $cache,
-        SerializerInterface $serializer,
-        ?KeyBuilderInterface $keyBuilder,
-        ?CompressorInterface $compressor
+        SerializerInterface $serializer = null,
+        KeyBuilderInterface $keyBuilder = null,
+        CompressorInterface $compressor = null,
+        string $namespace = null,
+        int $ttl = 3600
     ) {
         $this->cache = $cache;
-        $this->serializer = $serializer;
+        $this->namespace = $namespace;
+        $this->serializer = $serializer ?? new NullSerializer();
         $this->keyBuilder = $keyBuilder ?? new NullKeyBuilder();
         $this->compressor = $compressor ?? new NullCompressor();
+        $this->namespace = $namespace;
+        $this->ttl = $ttl;
     }
 
     /**
@@ -101,7 +121,7 @@ class Cache implements CacheInterface
         list($hits, $misses) = $this->searchKeys((array)$keys);
         if (count($misses) > 0) {
             array_walk($misses, function (&$v) {
-                $this->buildKey($v);
+                $v = $this->buildKey($v);
             });
 
             $cacheHits = (array)$this->cache->getMultiple($misses);
@@ -124,13 +144,12 @@ class Cache implements CacheInterface
      */
     public function setMultiple($values, $ttl = null): bool
     {
-        $encodedValues = (array)$values;
-        array_walk($encodedValues, function (&$v, &$k) {
-            $k = $this->buildKey($k);
-            $v = $this->encode($v);
-        });
+        $encodedValues = [];
+        foreach ($values as $k => $v) {
+            $encodedValues[$this->buildKey($k)] = $this->encode($v);
+        }
 
-        if (($status = $this->cache->setMultiple($encodedValues, $ttl ?? 300))) {
+        if (($status = $this->cache->setMultiple($encodedValues, $ttl ?? $this->ttl))) {
             $this->setToMemory((array)$values);
         }
 
@@ -142,9 +161,12 @@ class Cache implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        $keys = array_map(function ($v) { return $this->buildKey($v); }, (array)$keys);
-        if ($status = $this->cache->deleteMultiple($keys)) {
-            $this->unsetFromMemory($keys);
+        $cacheKeys = array_map(function ($v) {
+            return $this->buildKey($v);
+        }, (array)$keys);
+
+        if ($status = $this->cache->deleteMultiple($cacheKeys)) {
+            $this->unsetFromMemory((array)$keys);
         }
 
         return $status;
@@ -184,7 +206,11 @@ class Cache implements CacheInterface
      */
     public function buildKey($key, ...$args): string
     {
-        return $this->keyBuilder->build($key, ...$args);
+        return sprintf('%s%s%s',
+            $this->getNamespace(),
+            static::NAMESPACE_SEPARATOR,
+            $this->keyBuilder->build($key, ...$args)
+        );
     }
 
     /**
@@ -211,5 +237,13 @@ class Cache implements CacheInterface
         return $this->serializer->deserialize(
             $this->compressor->uncompress($value)
         );
+    }
+
+    /**
+     * @return string
+     */
+    protected function getNamespace()
+    {
+        return $this->namespace;
     }
 }

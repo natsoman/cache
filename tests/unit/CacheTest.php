@@ -136,7 +136,7 @@ final class CacheTest extends TestCase
     public function testDeleteMultiple($keyValue)
     {
         $this->cache->expects($this->once())->method('deleteMultiple')->willReturn(true);
-        $this->assertSame(true, $this->client->deleteMultiple($keyValue));
+        $this->assertSame(true, $this->client->deleteMultiple(array_keys($keyValue)));
     }
 
     public function provider()

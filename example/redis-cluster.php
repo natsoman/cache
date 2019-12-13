@@ -22,35 +22,29 @@ try {
     exit(0);
 }
 
-$serializer = new \Natso\Serializer\NativeSerializer();
-
-$compressor = new \Natso\Compressor\DeflateCompressor(6);
-
 $keyBuilderMap = [
-    'staticKey' => 'staticCacheKey', // for shared keys beetween
-    'uniqueKey' => sprintf('uniqueCacheKey-%s', 1), // use
-    'closureKey' => function () { return 'test';} // use closure to build keys that could be change in the runtime
+    'staticKey' => 'staticCacheKey',
+    'uniqueKey' => sprintf('uniqueCacheKey-%s', 1),
+    'closureKey' => function () {
+        return 'test';
+    } // use closure to build keys that could be change in the runtime
 ];
 
+$serializer = new \Natso\Serializer\NullSerializer();
+$compressor = new \Natso\Compressor\NullCompressor();
 $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($keyBuilderMap);
-
-$cache = new \Natso\Cache(
-    $cache,
-    $serializer,
-    $keyBuilder,
-    $compressor
-);
+$cache = new \Natso\Cache($cache, $serializer, $keyBuilder, $compressor, 'Example', 8400);
 
 try {
 
-    $set = $cache->set('staticKey',101);
-    $has = $cache->has('staticKey');
-    $get = $cache->get('staticKey');
-    $delete = $cache->delete('staticKey');
-    $has = $cache->has('staticKey');
+    $set = $cache->set('key', 101);
+    $has = $cache->has('key');
+    $get = $cache->get('key');
+    $delete = $cache->delete('key');
+    $has = $cache->has('key');
 
-    $keys = ['staticKey0', 'staticKey1', 'staticKey2'];
-    $setMultiple = $cache->setMultiple(['staticKey0' => null, 'staticKey1' => 101, 'staticKey2' => new stdClass()]);
+    $keys = ['key0', 'key1', 'key2'];
+    $setMultiple = $cache->setMultiple(['key0' => null, 'key1' => 101, 'key2' => new stdClass()]);
     $getMultiple = $cache->getMultiple($keys);
     $deleteMultiple = $cache->deleteMultiple($keys);
     $getMultiple = $cache->getMultiple($keys);

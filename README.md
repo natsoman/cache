@@ -32,7 +32,7 @@ $serializer = new \Natso\Serializer\NativeSerializer();
 $map = [
     'staticKey'     => 'staticCacheKey',
     'uniqueKey'     => sprintf('uniqueCacheKey:%s', $_GET['id']),
-    'closureKey'    => function () { return 'something that changes in the runtime'; }
+    'closureKey'    => function () { return 'something that change in the runtime'; }
 ];
 
 $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($map);
@@ -48,7 +48,9 @@ $cache = new \Natso\Cache(
     $adapter,
     $serializer,
     $keyBuilder,
-    $compressor
+    $compressor,
+    'Example', //namespace
+    8400 // ttl
 );
 
 $key = '101';
@@ -61,7 +63,6 @@ $keys = ['key0', 'key1', 'key2'];
 $cache->setMultiple(['key0' => null, 'key1' => 101, 'key2' => new stdClass()]);
 $cache->getMultiple($keys);
 $cache->deleteMultiple($keys);
-
 ```
 
 ## Memoization
