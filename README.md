@@ -49,8 +49,7 @@ $cache = new \Natso\Cache(
     $serializer,
     $keyBuilder,
     $compressor,
-    'Example', //namespace
-    8400 // ttl
+    ['namespace' => 'Example', 'ttl' => 3600]
 );
 
 $key = '101';
