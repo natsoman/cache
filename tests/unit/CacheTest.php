@@ -54,7 +54,8 @@ final class CacheTest extends TestCase
             $this->cache,
             $this->serializer,
             $this->keyBuilder,
-            $this->compressor
+            $this->compressor,
+            ['namespace' => 'Test']
         );
 
         parent::__construct($name, $data, $dataName);

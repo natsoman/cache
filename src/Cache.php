@@ -60,24 +60,21 @@ class Cache implements CacheInterface
      * @param SerializerInterface $serializer
      * @param KeyBuilderInterface|null $keyBuilder
      * @param CompressorInterface|null $compressor
-     * @param string|null $namespace
-     * @param int $ttl
+     * @param array $options
      */
     public function __construct(
         CacheInterface $cache,
         SerializerInterface $serializer = null,
         KeyBuilderInterface $keyBuilder = null,
         CompressorInterface $compressor = null,
-        string $namespace = null,
-        int $ttl = 3600
+        array $options = []
     ) {
         $this->cache = $cache;
-        $this->namespace = $namespace;
         $this->serializer = $serializer ?? new NullSerializer();
         $this->keyBuilder = $keyBuilder ?? new NullKeyBuilder();
         $this->compressor = $compressor ?? new NullCompressor();
-        $this->namespace = $namespace;
-        $this->ttl = $ttl;
+        $this->namespace = $options['namespace'] ?? '';
+        $this->ttl = $options['ttl'] ?? 3600;
     }
 
     /**
@@ -206,11 +203,7 @@ class Cache implements CacheInterface
      */
     public function buildKey($key, ...$args): string
     {
-        return sprintf('%s%s%s',
-            $this->getNamespace(),
-            static::NAMESPACE_SEPARATOR,
-            $this->keyBuilder->build($key, ...$args)
-        );
+        return sprintf('%s%s', $this->formatNamespace(), $this->keyBuilder->build($key, ...$args));
     }
 
     /**
@@ -221,9 +214,7 @@ class Cache implements CacheInterface
      */
     protected function encode($value): string
     {
-        return $this->compressor->compress(
-            $this->serializer->serialize($value)
-        );
+        return $this->compressor->compress($this->serializer->serialize($value));
     }
 
     /**
@@ -234,16 +225,18 @@ class Cache implements CacheInterface
      */
     protected function decode(string $value)
     {
-        return $this->serializer->deserialize(
-            $this->compressor->uncompress($value)
-        );
+        return $this->serializer->deserialize($this->compressor->uncompress($value));
     }
 
     /**
      * @return string
      */
-    protected function getNamespace()
+    protected function formatNamespace(): string
     {
-        return $this->namespace;
+        if ($this->namespace !== null) {
+            return sprintf('%s%s', $this->namespace, static::NAMESPACE_SEPARATOR);
+        }
+
+        return '';
     }
 }

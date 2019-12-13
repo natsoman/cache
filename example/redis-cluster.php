@@ -25,15 +25,19 @@ try {
 $keyBuilderMap = [
     'staticKey' => 'staticCacheKey',
     'uniqueKey' => sprintf('uniqueCacheKey-%s', 1),
-    'closureKey' => function () {
-        return 'test';
-    } // use closure to build keys that could be change in the runtime
+    'closureKey' => function () { return 'test';} // use closure to build keys that could be change in the runtime
 ];
 
 $serializer = new \Natso\Serializer\NullSerializer();
 $compressor = new \Natso\Compressor\NullCompressor();
 $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($keyBuilderMap);
-$cache = new \Natso\Cache($cache, $serializer, $keyBuilder, $compressor, 'Example', 8400);
+$cache = new \Natso\Cache(
+    $cache,
+    $serializer,
+    $keyBuilder,
+    $compressor,
+    ['namespace' => 'Example', 'ttl' => 3600]
+);
 
 try {
 
