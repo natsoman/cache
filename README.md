@@ -65,4 +65,4 @@ $cache->deleteMultiple($keys);
 ```
 
 ## Memoization
-In order to reduce the use of caching service, we preserve an associative array which represents an extra caching layer.
+In order to reduce the use of caching service, wrapper preserves an associative array which represents an extra caching layer.
