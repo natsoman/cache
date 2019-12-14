@@ -26,7 +26,7 @@ $adapter = new \Natso\Adapter\RedisAdapter($service);
 $serializer = new \Natso\Serializer\NativeSerializer();
 ``` 
 
-\Natso\KeyBuilder\KeyBuilderInterface (optional)
+\Natso\KeyBuilder\KeyBuilderInterface
 ```
 
 $map = [
@@ -38,7 +38,7 @@ $map = [
 $keyBuilder = new \Natso\KeyBuilder\SimpleKeyBuilder($map);
 ``` 
 
-\Natso\Compressor\CompressorInterface (optional)
+\Natso\Compressor\CompressorInterface
 ```
 $compressor = new \Natso\Compressor\ZlibCompressor();
 ``` 
