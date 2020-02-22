@@ -70,7 +70,7 @@ class ApcAdapter implements CacheInterface {
      */
     public function clear()
     {
-        return apcu_clear_cache();
+        return apc_clear_cache();
     }
 
     /**
