@@ -10,7 +10,6 @@ use Natso\Exception\CacheException;
 
 class RedisAdapter implements CacheInterface
 {
-
     /**
      * @var PhpRedis|Predis|RedisCluster
      */
@@ -59,7 +58,6 @@ class RedisAdapter implements CacheInterface
     public function getMultiple($keys, $default = null): array
     {
         $cacheRecords = $this->service->mget((array)$keys);
-
         foreach ($cacheRecords as &$value) {
             if ($value === false) {
                 $value = $default;

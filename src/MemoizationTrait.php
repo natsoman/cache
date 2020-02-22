@@ -2,20 +2,20 @@
 
 namespace Natso;
 
-trait MemoizationTrait {
-
+trait MemoizationTrait
+{
     /**
      * @var array
      */
     protected $memory = [];
-    
+
     /**
      * @param string $key
      * @param $value
      */
-    protected function addToMemory(string $key, $value): void 
+    protected function addToMemory(string $key, $value): void
     {
-    	$this->memory[$key] = $value;
+        $this->memory[$key] = $value;
     }
 
     /**
@@ -24,13 +24,13 @@ trait MemoizationTrait {
      */
     protected function getFromMemory(string $key)
     {
-    	return $this->memory[$key] ?? null;
+        return $this->memory[$key] ?? null;
     }
 
     /**
      * @param string $key
      */
-    protected function deleteFromMemory(string $key): void 
+    protected function deleteFromMemory(string $key): void
     {
         unset($this->memory[$key]);
     }
@@ -38,9 +38,9 @@ trait MemoizationTrait {
     /**
      * @param array $values Associative array
      */
-    protected function setToMemory(array $values): void 
+    protected function setToMemory(array $values): void
     {
-    	$this->memory = array_merge($this->memory, $values);
+        $this->memory = array_merge($this->memory, $values);
     }
 
     /**
@@ -58,7 +58,7 @@ trait MemoizationTrait {
     protected function searchKeys(array $keys): array
     {
         $hits = $misses = [];
-        foreach($keys as $key) {
+        foreach ($keys as $key) {
             if (isset($this->memory[$key])) {
                 $hits[$key] = $this->memory[$key];
             } else {
@@ -66,7 +66,7 @@ trait MemoizationTrait {
             }
         }
 
-        return [$hits,$misses];
+        return [$hits, $misses];
     }
 
     protected function cleanMemory(): void

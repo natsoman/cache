@@ -4,7 +4,6 @@ namespace Natso\Compressor;
 
 interface CompressorInterface
 {
-
     /**
      * @param string $value
      * @return string

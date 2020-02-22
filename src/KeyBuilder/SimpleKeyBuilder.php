@@ -6,7 +6,6 @@ use Natso\Exception\InvalidKeyException;
 
 class SimpleKeyBuilder implements KeyBuilderInterface
 {
-
     /**
      * @var array
      */
@@ -22,7 +21,7 @@ class SimpleKeyBuilder implements KeyBuilderInterface
 
     /**
      * @param string $key
-     * @param mixed []$args
+     * @param mixed [] $args
      * @return string
      * @throws InvalidKeyException
      */

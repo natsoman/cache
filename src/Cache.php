@@ -18,7 +18,7 @@ use Natso\Compressor\{
 
 class Cache implements CacheInterface
 {
-    const NAMESPACE_SEPARATOR = ':';
+    public const NAMESPACE_SEPARATOR = ':';
 
     /**
      * @var MemoizationTrait
@@ -117,18 +117,24 @@ class Cache implements CacheInterface
     {
         list($hits, $misses) = $this->searchKeys((array)$keys);
         if (count($misses) > 0) {
-            array_walk($misses, function (&$v) {
-                $v = $this->buildKey($v);
-            });
+            array_walk(
+                $misses,
+                function (&$v) {
+                    $v = $this->buildKey($v);
+                }
+            );
 
             $cacheHits = (array)$this->cache->getMultiple($misses);
-            array_walk($cacheHits, function (&$value) use ($default) {
-                if ($value !== null) {
-                    $value = $this->decode($value);
-                } else {
-                    $value = $default;
+            array_walk(
+                $cacheHits,
+                function (&$value) use ($default) {
+                    if ($value !== null) {
+                        $value = $this->decode($value);
+                    } else {
+                        $value = $default;
+                    }
                 }
-            });
+            );
 
             $hits = array_merge($hits, $cacheHits);
         }
@@ -158,9 +164,12 @@ class Cache implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        $cacheKeys = array_map(function ($v) {
-            return $this->buildKey($v);
-        }, (array)$keys);
+        $cacheKeys = array_map(
+            function ($v) {
+                return $this->buildKey($v);
+            },
+            (array)$keys
+        );
 
         if ($status = $this->cache->deleteMultiple($cacheKeys)) {
             $this->unsetFromMemory((array)$keys);

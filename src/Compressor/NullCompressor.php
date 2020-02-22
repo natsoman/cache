@@ -4,7 +4,6 @@ namespace Natso\Compressor;
 
 class NullCompressor implements CompressorInterface
 {
-
     /**
      * @inheritdoc
      */

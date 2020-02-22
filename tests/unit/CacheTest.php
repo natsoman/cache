@@ -84,14 +84,14 @@ final class CacheTest extends TestCase
         $this->assertEquals($value, $actualValue);
     }
 
-	/**
+    /**
      * @dataProvider provider
-	 */
-	public function testHas($value, $key, $serializedValue, $compressedValue)
-	{
+     */
+    public function testHas($value, $key, $serializedValue, $compressedValue)
+    {
         $this->cache->expects($this->once())->method('has')->willReturn(true);
-		$this->assertSame(true, $this->client->has($key));
-	}
+        $this->assertSame(true, $this->client->has($key));
+    }
 
 
     /**
@@ -106,7 +106,7 @@ final class CacheTest extends TestCase
     /**
      * @dataProvider multiProvider
      */
-	public function testSetMultiple($keyValue)
+    public function testSetMultiple($keyValue)
     {
         $this->serializer->expects($this->any())->method('serialize')->willReturnMap($this->getSerializationMap());
         $this->compressor->expects($this->any())->method('compress')->willReturnMap($this->getCompressionMap());
@@ -114,11 +114,11 @@ final class CacheTest extends TestCase
         $this->assertSame(true, $this->client->setMultiple($keyValue));
     }
 
-	/**
+    /**
      * @dataProvider multiProvider
-	 */
-	public function testGetMultiple($keyValue, $cachedValues)
-	{
+     */
+    public function testGetMultiple($keyValue, $cachedValues)
+    {
         $this->serializer->expects($this->any())
             ->method('deserialize')
             ->willReturnMap($this->getSerializationMap(true));
@@ -128,8 +128,8 @@ final class CacheTest extends TestCase
             ->willReturnMap($this->getCompressionMap(true));
 
         $this->cache->expects($this->once())->method('getMultiple')->willReturn($cachedValues);
-		$this->assertEquals($keyValue, $this->client->getMultiple(array_keys($keyValue)));
-	}
+        $this->assertEquals($keyValue, $this->client->getMultiple(array_keys($keyValue)));
+    }
 
     /**
      * @dataProvider multiProvider
@@ -145,8 +145,13 @@ final class CacheTest extends TestCase
         return [
             'string' => ['value', 'stringKey', 's:5:"value";', 'x�+�2�R*K�)MU�\0008�'],
             'emptyString' => ['', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
-            'emptyStrings' => ['      
-            ', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
+            'emptyStrings' => [
+                '      
+            ',
+                'emptyStringKey',
+                's:0:"";',
+                'x�+�2�RR�\000E�'
+            ],
             'null' => [null, 'nullKey', 'N;', 'x��\000\000�\000�'],
             'false' => [false, 'falseKey', 'b:0;', 'x�K�2�\000'],
             'object' => [new stdClass(), 'objectKey', 'O:8:"stdClass":0:{}', 'x�󷲰R*.Iq�I,.V�2���\000:F'],
@@ -235,8 +240,11 @@ final class CacheTest extends TestCase
                 ['b:0;', 'x�K�2�\000'],
                 ['b:1;', 'x�K�2�\000�'],
                 ['s:0:"";', 'x�+�2�RR�\000E�'],
-                ['s:2:"  ";', 'x�+�2�RRPP�\000
-��']
+                [
+                    's:2:"  ";',
+                    'x�+�2�RRPP�\000
+��'
+                ]
             ];
         } else {
             return [
@@ -246,8 +254,11 @@ final class CacheTest extends TestCase
                 ['x�K�2�\000', 'b:0;'],
                 ['x�K�2�\000�', 'b:1;'],
                 ['x�+�2�RR�\000E�', 's:0:"";'],
-                ['x�+�2�RRPP�\000
-��', 's:2:"  ";']
+                [
+                    'x�+�2�RRPP�\000
+��',
+                    's:2:"  ";'
+                ]
             ];
         }
     }
