@@ -199,9 +199,12 @@ class Cache implements CacheInterface
     }
 
     /**
-     * @inheritdoc
+     * @param string $key
+     * @param mixed ...$args
+     * @return string
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    public function buildKey($key, ...$args): string
+    public function buildKey(string $key, ...$args): string
     {
         return sprintf('%s%s', $this->formatNamespace(), $this->keyBuilder->build($key, ...$args));
     }
