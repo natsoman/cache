@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/natsopoulos/cache.svg?branch=develop)](https://travis-ci.org/natsopoulos/cache)
+
 A flexible PSR-16 wrapper.
 
 ## Use
