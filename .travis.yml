@@ -5,6 +5,6 @@ php:
   -
 before_script:
   - composer self-update
-  - composer install --prefer-source --no-interaction --dev
+  - composer install --prefer-source --no-interaction --ignore-platform-reqs --dev
 
 script: ./vendor/bin/phpunit --bootstrap vendor/autoload.php
