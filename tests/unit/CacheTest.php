@@ -9,10 +9,11 @@ use Natso\KeyBuilder\NullKeyBuilder;
 use Natso\Serializer\SerializerInterface;
 use Psr\SimpleCache\CacheInterface;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 final class CacheTest extends TestCase
 {
+    protected const DATA_DIR = __DIR__ . '/./data/CacheTest/';
+
     /**
      * @var CacheInterface
      */
@@ -142,124 +143,29 @@ final class CacheTest extends TestCase
 
     public function provider()
     {
-        return [
-            'string' => ['value', 'stringKey', 's:5:"value";', 'x�+�2�R*K�)MU�\0008�'],
-            'emptyString' => ['', 'emptyStringKey', 's:0:"";', 'x�+�2�RR�\000E�'],
-            'emptyStrings' => [
-                '      
-            ',
-                'emptyStringKey',
-                's:0:"";',
-                'x�+�2�RR�\000E�'
-            ],
-            'null' => [null, 'nullKey', 'N;', 'x��\000\000�\000�'],
-            'false' => [false, 'falseKey', 'b:0;', 'x�K�2�\000'],
-            'object' => [new stdClass(), 'objectKey', 'O:8:"stdClass":0:{}', 'x�󷲰R*.Iq�I,.V�2���\000:F'],
-            'int' => [1, 'intKey', 'i:1;', 'x�˴2�\000�'],
-            'double' => [0.11, 'doubleKey', 'd:0.11;', 'x�K�2�34�\000��'],
-            'nestedArray' => [
-                ['a' => 3, 'b' => 2, ['aa' => 22]],
-                'nestedArrayKey',
-                'a:3:{s:1:"a";i:3;s:1:"b";i:2;i:0;a:1:{s:2:"aa";i:22;}}',
-                'x�K�2��.�2�RJT�δ2���@l# 6�N����*���kk�8�'
-            ],
-        ];
+        return require static::DATA_DIR . 'provider.php';
     }
 
     public function multiProvider()
     {
-        return [
-            'string' => [
-                [
-                    'stringKey0' => 'value0',
-                    'stringKey1' => 'value1',
-                    'stringKey2' => 'value2'
-                ],
-                [
-                    'stringKey0' => 'x�+�2�R*K�)M5P�\000/�',
-                    'stringKey1' => 'x�+�2�R*K�)M5T�\0002�',
-                    'stringKey2' => 'x�+�2�R*K�)M5R�\0005�'
-                ],
-            ],
-            'empty' => [
-                [
-                    'emptyStringKey0' => '',
-                    'emptyStringKey1' => '  ',
-                ],
-                [
-                    'emptyStringKey0' => 'x�+�2�RR�\000E�',
-                    'emptyStringKey1' => 'x�+�2�RRPP�\000
-��',
-                ],
-            ],
-            'bool' => [
-                [
-                    'boolKey0' => false,
-                    'boolKey1' => true,
-                ],
-                [
-                    'boolKey0' => 'x�K�2�\000',
-                    'boolKey1' => 'x�K�2�\000�',
-                ],
-            ]
-        ];
+        return require static::DATA_DIR . 'multi-provider.php';
     }
 
     protected function getSerializationMap($flip = false)
     {
         if (!$flip) {
-            return [
-                ['value0', 's:6:"value0";'],
-                ['value1', 's:6:"value1";'],
-                ['value2', 's:6:"value2";'],
-                [false, 'b:0;'],
-                [true, 'b:1;'],
-                ['', 's:0:"";'],
-                ['  ', 's:2:"  ";']
-            ];
+            return require static::DATA_DIR . 'serialization-map.php';
         } else {
-            return [
-                ['s:6:"value0";', 'value0'],
-                ['s:6:"value1";', 'value1'],
-                ['s:6:"value2";', 'value2'],
-                ['b:0;', false],
-                ['b:1;', true],
-                ['s:0:"";', ''],
-                ['s:2:"  ";', '  ']
-            ];
+            return require static::DATA_DIR . 'serialization-map-flip.php';
         }
     }
 
     protected function getCompressionMap($flip = false)
     {
         if (!$flip) {
-            return [
-                ['s:6:"value0";', 'x�+�2�R*K�)M5P�\000/�'],
-                ['s:6:"value1";', 'x�+�2�R*K�)M5T�\0002�'],
-                ['s:6:"value2";', 'x�+�2�R*K�)M5R�\0005�'],
-                ['b:0;', 'x�K�2�\000'],
-                ['b:1;', 'x�K�2�\000�'],
-                ['s:0:"";', 'x�+�2�RR�\000E�'],
-                [
-                    's:2:"  ";',
-                    'x�+�2�RRPP�\000
-��'
-                ]
-            ];
+            return require static::DATA_DIR . 'compression-map.php';
         } else {
-            return [
-                ['x�+�2�R*K�)M5P�\000/�', 's:6:"value0";'],
-                ['x�+�2�R*K�)M5T�\0002�', 's:6:"value1";'],
-                ['x�+�2�R*K�)M5R�\0005�', 's:6:"value2";'],
-                ['x�K�2�\000', 'b:0;'],
-                ['x�K�2�\000�', 'b:1;'],
-                ['x�+�2�RR�\000E�', 's:0:"";'],
-                [
-                    'x�+�2�RRPP�\000
-��',
-                    's:2:"  ";'
-                ]
-            ];
+            return require static::DATA_DIR . 'compression-map-flip.php';
         }
     }
 }
